@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pricing Page Editor — Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1f2436;
+    --border: #2a3047;
+    --accent: #4f8ef7;
+    --accent2: #38c9a0;
+    --warn: #f5a623;
+    --text: #e2e8f0;
+    --text-muted: #6b7a99;
+    --text-dim: #3d4a63;
+    --danger: #e05c6a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    height: 48px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topbar-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    margin-right: 8px;
+  }
+  .file-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .file-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+  }
+  .file-badge .dot.dirty { background: var(--warn); }
+  .topbar-spacer { flex: 1; }
+  .env-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #1a2a1a;
+    color: var(--accent2);
+    border: 1px solid #2a4a2a;
+    text-transform: uppercase;
+  }
+  .btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-save {
+    background: var(--accent2);
+    color: #0f1117;
+    font-weight: 600;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── LEFT NAV ── */
+  .nav {
+    width: 200px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .nav-section {
+    padding: 14px 14px 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-left: 2px solid transparent;
+    transition: all 0.12s;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--surface2);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+  .nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; }
+  .nav-item .nav-count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1px 6px;
+    color: var(--text-dim);
+  }
+  .nav-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 14px;
+  }
+
+  /* ── EDITOR PANEL ── */
+  .editor {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .page-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-title .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    font-family: var(--mono);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+  .card-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+    font-family: var(--mono);
+  }
+  .card-body { padding: 16px; }
+
+  /* ── FORM FIELDS ── */
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .field-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field-grid.cols-1 { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .field-label .required { color: var(--danger); margin-left: 2px; }
+  .field input, .field textarea, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field textarea { resize: vertical; min-height: 60px; font-family: var(--sans); }
+  .field-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  .field input[type="number"] { font-family: var(--mono); }
+
+  /* ── PACKAGE TABS ── */
+  .pkg-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    background: var(--surface2);
+    overflow-x: auto;
+  }
+  .pkg-tab {
+    padding: 9px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .pkg-tab:hover { color: var(--text); }
+  .pkg-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── VOLUME BANDS TABLE ── */
+  .vol-table { width: 100%; border-collapse: collapse; }
+  .vol-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .vol-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .vol-table tr:last-child td { border-bottom: none; }
+  .vol-table tr:hover td { background: var(--surface2); }
+  .vol-table td input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 7px;
+    width: 100%;
+    outline: none;
+  }
+  .vol-table td input:focus { border-color: var(--accent); }
+  .vol-table .band-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .vol-table .band-label .tier {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    text-align: center;
+    line-height: 18px;
+    font-size: 9px;
+    color: var(--accent);
+    margin-right: 6px;
+    font-weight: 600;
+  }
+
+  .add-band-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    width: 100%;
+    justify-content: center;
+  }
+  .add-band-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── OPTION ITEMS ── */
+  .option-item {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .option-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .option-type-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: #1a1f35;
+    border: 1px solid var(--border);
+    color: var(--warn);
+  }
+  .option-item-body { padding: 14px; }
+
+  /* ── PREVIEW PANEL ── */
+  .preview {
+    width: 280px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .preview-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .preview-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .preview-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    white-space: pre;
+  }
+  .json-key { color: #7aa2f7; }
+  .json-str { color: #9ece6a; }
+  .json-num { color: #ff9e64; }
+  .json-bool { color: #bb9af7; }
+
+  /* ── STATUS BAR ── */
+  .statusbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    height: 26px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .status-item .ok { color: var(--accent2); }
+  .status-item .warn { color: var(--warn); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 4px 0;
+  }
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">⬡ PRICING EDITOR</div>
+  <div class="file-badge">
+    <span class="dot dirty"></span>
+    item_mn__08092024.json
+  </div>
+  <button class="btn btn-ghost">📂 Open File</button>
+  <div class="topbar-spacer"></div>
+  <div class="env-pill">● draft</div>
+  <button class="btn btn-ghost">↩ Discard</button>
+  <button class="btn btn-save">💾 Save File</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT NAV -->
+  <div class="nav">
+    <div class="nav-section">Sections</div>
+    <div class="nav-item active">
+      <span class="nav-icon">⊞</span> Metadata
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">◈</span> Packages
+      <span class="nav-count">5</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">◇</span> Option Items
+      <span class="nav-count">2</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⊙</span> Custom Attributes
+      <span class="nav-count">2</span>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item">
+      <span class="nav-icon">⌥</span> Validate JSON
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⊡</span> Compare Versions
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor">
+
+    <!-- METADATA SECTION (active) -->
+    <div class="page-title">
+      Metadata
+      <span class="subtitle">item_mn__08092024.json → top-level fields</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Product Identity</div>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <div class="field">
+            <div class="field-label">Name <span class="required">*</span></div>
+            <input type="text" value="Medical Network APIs">
+          </div>
+          <div class="field">
+            <div class="field-label">Slug <span class="required">*</span></div>
+            <input type="text" value="mn" style="font-family: var(--mono);">
+          </div>
+          <div class="field">
+            <div class="field-label">Catalog Code</div>
+            <input type="text" value="CHC-m0ck00008806" style="font-family: var(--mono);">
+          </div>
+          <div class="field">
+            <div class="field-label">View Template</div>
+            <select>
+              <option selected>API-Tiered-Public</option>
+              <option>API-Flat-Public</option>
+              <option>API-Usage-Public</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="field-label">Max Quantity</div>
+            <input type="number" value="1" style="font-family: var(--mono);">
+          </div>
+          <div class="field">
+            <div class="field-label">Description</div>
+            <input type="text" value="Medical Network APIs">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Display Content</div>
+      </div>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="field">
+          <div class="field-label">Header Description</div>
+          <textarea style="min-height: 70px;"><b>Optimize claims handling and boost payer and patient satisfaction</b> with our Medical Network APIs...</textarea>
+          <div class="field-hint">Supports HTML tags: &lt;b&gt;, &lt;br&gt;, &lt;ul&gt;, &lt;li&gt;</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Payment Schedule Notice</div>
+          <textarea style="min-height: 50px;">No payment is required to check out at this time; all charges will be invoiced.</textarea>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <div class="field-label">Tooltip Text</div>
+            <input type="text" placeholder="(empty)">
+          </div>
+          <div class="field">
+            <div class="field-label">Tooltip Description</div>
+            <input type="text" placeholder="(empty)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Contact Info</div>
+      </div>
+      <div class="card-body">
+        <div class="field-grid cols-3">
+          <div class="field">
+            <div class="field-label">Support Email</div>
+            <input type="text" value="marketplacesupport@optum.com">
+          </div>
+          <div class="field">
+            <div class="field-label">Email Subject</div>
+            <input type="text" value="(TBD)Default Subject">
+          </div>
+          <div class="field">
+            <div class="field-label">Email Content</div>
+            <input type="text" value="(TBD)Default Email Content">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACKAGES SECTION (shown as next card for reference) -->
+    <div class="page-title" style="margin-top: 8px;">
+      Packages
+      <span class="subtitle">5 packages — select to edit</span>
+    </div>
+
+    <div class="card">
+      <div class="pkg-tabs">
+        <div class="pkg-tab active">Eligibility</div>
+        <div class="pkg-tab">Institutional Claims</div>
+        <div class="pkg-tab">Professional Claims</div>
+        <div class="pkg-tab">Claim Status</div>
+        <div class="pkg-tab">ERA</div>
+      </div>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+
+        <div class="section-divider">Pricing</div>
+        <div class="field-grid cols-3">
+          <div class="field">
+            <div class="field-label">Base Amount <span class="required">*</span></div>
+            <input type="number" value="200" style="font-family: var(--mono);">
+            <div class="field-hint">Monthly minimum ($)</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Amount Description</div>
+            <input type="text" value="Starting at $200.00/month">
+          </div>
+          <div class="field">
+            <div class="field-label">Unit</div>
+            <input type="text" value="month" style="font-family: var(--mono);">
+          </div>
+        </div>
+
+        <div class="section-divider">Identity & Copy</div>
+        <div class="field-grid">
+          <div class="field">
+            <div class="field-label">Internal Name</div>
+            <input type="text" value="Eligibility" style="font-family: var(--mono);">
+          </div>
+          <div class="field">
+            <div class="field-label">Display Name</div>
+            <input type="text" value="Eligibility">
+          </div>
+          <div class="field">
+            <div class="field-label">Marketing Title</div>
+            <input type="text" value="Minimum charged monthly for service">
+          </div>
+          <div class="field">
+            <div class="field-label">Tagline</div>
+            <input type="text" placeholder="(empty)">
+          </div>
+        </div>
+        <div class="field-grid cols-1">
+          <div class="field">
+            <div class="field-label">Short Description</div>
+            <input type="text" placeholder="(empty)">
+          </div>
+          <div class="field">
+            <div class="field-label">Long Description</div>
+            <textarea placeholder="(empty)" style="min-height: 55px;"></textarea>
+            <div class="field-hint">Supports HTML tags</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Tooltip Description</div>
+            <input type="text" placeholder="(empty)">
+          </div>
+        </div>
+
+        <div class="section-divider">Monthly Volume Bands</div>
+        <table class="vol-table">
+          <thead>
+            <tr>
+              <th>Tier</th>
+              <th>Min Transactions</th>
+              <th>Max Transactions</th>
+              <th>Unit Price ($)</th>
+              <th>Unit Label</th>
+              <th>Amount Description</th>
+              <th>Sub-unit Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="band-label"><span class="tier">1</span>Included</span></td>
+              <td><input type="number" value="0"></td>
+              <td><input type="number" value="1000"></td>
+              <td><input type="number" value="0" step="0.01"></td>
+              <td><input type="text" value="Included"></td>
+              <td><input type="text" value="Included"></td>
+              <td><input type="text" value="requests per month"></td>
+            </tr>
+            <tr>
+              <td><span class="band-label"><span class="tier">2</span>Per-unit</span></td>
+              <td><input type="number" value="1001"></td>
+              <td><input type="number" value="40000"></td>
+              <td><input type="number" value="0.18" step="0.01"></td>
+              <td><input type="text" value="request"></td>
+              <td><input type="text" placeholder="(empty)"></td>
+              <td><input type="text" value="requests per month"></td>
+            </tr>
+            <tr>
+              <td><span class="band-label"><span class="tier">3</span>Per-unit</span></td>
+              <td><input type="number" value="40001"></td>
+              <td><input type="number" value="100000"></td>
+              <td><input type="number" value="0.15" step="0.01"></td>
+              <td><input type="text" value="request"></td>
+              <td><input type="text" placeholder="(empty)"></td>
+              <td><input type="text" value="requests per month"></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="add-band-btn">+ Add Volume Band</button>
+
+      </div>
+    </div>
+
+    <!-- OPTION ITEMS PREVIEW -->
+    <div class="page-title" style="margin-top: 8px;">
+      Option Items
+      <span class="subtitle">Implementations &amp; Add-ons</span>
+    </div>
+
+    <div class="option-item">
+      <div class="option-item-header">
+        <span class="option-type-tag">Implementations</span>
+        <span style="font-size:11px; color: var(--text-muted);">1 line item</span>
+      </div>
+      <div class="option-item-body">
+        <div class="field cols-1" style="margin-bottom: 12px;">
+          <div class="field-label">Header Description</div>
+          <textarea style="min-height: 50px;"><b>Get up and running faster</b> with our implementation services.</textarea>
+        </div>
+        <div class="field-grid cols-3">
+          <div class="field">
+            <div class="field-label">Internal Name</div>
+            <input type="text" value="Implementation Fee for Medical Network APIs">
+          </div>
+          <div class="field">
+            <div class="field-label">Amount ($)</div>
+            <input type="number" value="500" style="font-family: var(--mono);">
+          </div>
+          <div class="field">
+            <div class="field-label">Unit</div>
+            <input type="text" value="one-time fee">
+          </div>
+        </div>
+        <div class="field" style="margin-top: 12px;">
+          <div class="field-label">Long Description</div>
+          <textarea style="min-height: 55px;">One time fee for set-up, onboarding, and configuration of the EDI Services completed by our team.</textarea>
+          <div class="field-hint">Supports HTML tags</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-item">
+      <div class="option-item-header">
+        <span class="option-type-tag" style="color: var(--accent2);">Addons</span>
+        <span style="font-size:11px; color: var(--text-muted);">1 line item</span>
+      </div>
+      <div class="option-item-body">
+        <div class="field cols-1" style="margin-bottom: 12px;">
+          <div class="field-label">Header Description</div>
+          <textarea style="min-height: 50px;">This list shows additional fees applied when monthly volume limits are exceeded.</textarea>
+        </div>
+        <div class="field-grid cols-3">
+          <div class="field">
+            <div class="field-label">Internal Name</div>
+            <input type="text" value="Attachments Submission">
+          </div>
+          <div class="field">
+            <div class="field-label">Amount ($)</div>
+            <input type="number" value="0.50" step="0.01" style="font-family: var(--mono);">
+          </div>
+          <div class="field">
+            <div class="field-label">Unit</div>
+            <input type="text" value="per attachment">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 32px;"></div>
+  </div><!-- /editor -->
+
+  <!-- PREVIEW PANEL -->
+  <div class="preview">
+    <div class="preview-header">
+      <span class="preview-title">JSON Preview</span>
+      <button class="btn btn-ghost" style="font-size: 10px; padding: 3px 8px;">Copy</button>
+    </div>
+    <div class="preview-body"><span class="json-key">"name"</span>: <span class="json-str">"Medical Network APIs"</span>,
+<span class="json-key">"slug"</span>: <span class="json-str">"mn"</span>,
+<span class="json-key">"maxQuantity"</span>: <span class="json-num">1</span>,
+<span class="json-key">"catalogCode"</span>: <span class="json-str">"CHC-m0ck00008806"</span>,
+<span class="json-key">"viewTemplate"</span>: <span class="json-str">"API-Tiered-Public"</span>,
+<span class="json-key">"packages"</span>: [
+  {
+    <span class="json-key">"internalName"</span>: <span class="json-str">"Eligibility"</span>,
+    <span class="json-key">"amount"</span>: <span class="json-num">200</span>,
+    <span class="json-key">"unit"</span>: <span class="json-str">"month"</span>,
+    <span class="json-key">"monthlyVolumes"</span>: [
+      {
+        <span class="json-key">"minimumValue"</span>: <span class="json-num">0</span>,
+        <span class="json-key">"maximumValue"</span>: <span class="json-num">1000</span>,
+        <span class="json-key">"transactionUnitAmount"</span>: <span class="json-num">0</span>,
+        <span class="json-key">"unit"</span>: <span class="json-str">"Included"</span>
+      },
+      {
+        <span class="json-key">"minimumValue"</span>: <span class="json-num">1001</span>,
+        <span class="json-key">"maximumValue"</span>: <span class="json-num">40000</span>,
+        <span class="json-key">"transactionUnitAmount"</span>: <span class="json-num">0.18</span>,
+        <span class="json-key">"unit"</span>: <span class="json-str">"request"</span>
+      },
+      ...
+    ]
+  },
+  ...
+],
+<span class="json-key">"optionItems"</span>: [
+  {
+    <span class="json-key">"optionItemType"</span>: <span class="json-str">"Implementations"</span>,
+    <span class="json-key">"optionLineItems"</span>: [...]
+  }
+]</div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="status-item"><span class="warn">●</span> Unsaved changes</div>
+  <div class="status-item">5 packages</div>
+  <div class="status-item">3 vol. bands / pkg</div>
+  <div class="status-item">2 option items</div>
+  <div class="status-item" style="margin-left: auto;"><span class="ok">✓</span> Valid JSON</div>
+  <div class="status-item">item_mn__08092024.json</div>
+</div>
+
+</body>
+</html>

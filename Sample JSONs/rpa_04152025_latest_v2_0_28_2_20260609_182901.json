@@ -1,0 +1,610 @@
+{
+  "name": "Revenue Performance Advisor",
+  "description": "Revenue Performance Advisor",
+  "slug": "rpa",
+  "maxQuantity": 1,
+  "catalogCode": "10001954",
+  "viewTemplate": "Software-MonthlyVolume-Public",
+  "imageName": "",
+  "headerDescription": "<b>A package for every size and budget.</b> Optimize your financial interactions, maximize revenue streams and boost patient satisfaction with our tailored suite of tools designed to suit your needs and budget.<br><br>*Each bundle has required implementation fees in addition to monthly charges.",
+  "toolTipText": "",
+  "toolTipDescription": "",
+  "paymentSchedule": "No payment is required to check out at this time; all charges will be invoiced.",
+  "customAttributes": [],
+  "discountItems": [],
+  "contractTerms": {
+    "headerDescription": "<b>Save money with a longer term.</b> A longer initial contract term offers significant savings compared with a one-year contract. Also, save time with auto renewal. Automatically extend your contract to save time and prevent service disruption.",
+    "toolTipText": "",
+    "toolTipDescription": "",
+    "isAutoRenewalEnabled": 1,
+    "contractInitialTerm": [
+      {
+        "termValue": 1,
+        "termUnit": "Y",
+        "description": "",
+        "isDefault": 0,
+        "sortOrder": 0,
+        "discountItems": []
+      },
+      {
+        "termValue": 3,
+        "termUnit": "Y",
+        "description": "",
+        "isDefault": 0,
+        "sortOrder": 1,
+        "discountItems": []
+      },
+      {
+        "termValue": 5,
+        "termUnit": "Y",
+        "description": "",
+        "isDefault": 1,
+        "sortOrder": 2,
+        "discountItems": []
+      }
+    ],
+    "contractAutoRenewalTerm": [
+      {
+        "termValue": 1,
+        "termUnit": "Y",
+        "description": "Automatically renews for 1 year",
+        "isDefault": 1,
+        "sortOrder": 0,
+        "discountItems": []
+      }
+    ]
+  },
+  "packages": [
+    {
+      "internalName": "RPA Bundle",
+      "name": "RPA Bundle",
+      "marketingTitle": "",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 0,
+      "amountDescription": "",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 1,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 0,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [
+        {
+          "catalogCode": "10004117",
+          "sortOrder": 0,
+          "isDisplay": 1
+        },
+        {
+          "catalogCode": "10004118",
+          "sortOrder": 1,
+          "isDisplay": 1
+        },
+        {
+          "catalogCode": "10004337",
+          "sortOrder": 2,
+          "isDisplay": 1
+        },
+        {
+          "catalogCode": "10005332",
+          "sortOrder": 3,
+          "isDisplay": 1
+        },
+        {
+          "catalogCode": "10005074",
+          "sortOrder": 4,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "Silver Bundle Monthly Volume 0",
+          "minimumValue": 1,
+          "maximumValue": 2500,
+          "amount": 1000,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.4,
+          "unit": "month",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "termAmounts": [
+            {
+              "initialTermId": "1Y",
+              "amount": 1000,
+              "transactionUnitAmount": 0.4,
+              "transactionUnitOverageAmount": 0.34
+            },
+            {
+              "initialTermId": "3Y",
+              "amount": 1000,
+              "transactionUnitAmount": 0.4,
+              "transactionUnitOverageAmount": 0.28
+            },
+            {
+              "initialTermId": "5Y",
+              "amount": 1000,
+              "transactionUnitAmount": 0.4,
+              "transactionUnitOverageAmount": 0.26
+            }
+          ],
+          "discountItems": []
+        },
+        {
+          "internalName": "Silver Bundle Monthly Volume 1",
+          "minimumValue": 2501,
+          "maximumValue": 5000,
+          "amount": 1000,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.2,
+          "unit": "month",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "",
+          "isDefault": 0,
+          "sortOrder": 1,
+          "termAmounts": [
+            {
+              "initialTermId": "1Y",
+              "amount": 1250,
+              "transactionUnitAmount": 0.25,
+              "transactionUnitOverageAmount": 0.29
+            },
+            {
+              "initialTermId": "3Y",
+              "amount": 1000,
+              "transactionUnitAmount": 0.2,
+              "transactionUnitOverageAmount": 0.24
+            },
+            {
+              "initialTermId": "5Y",
+              "amount": 1000,
+              "transactionUnitAmount": 0.2,
+              "transactionUnitOverageAmount": 0.22
+            }
+          ],
+          "discountItems": []
+        },
+        {
+          "internalName": "Silver Bundle Monthly Volume 2",
+          "minimumValue": 5001,
+          "maximumValue": 7500,
+          "amount": 1425,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.19,
+          "unit": "month",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "",
+          "isDefault": 0,
+          "sortOrder": 2,
+          "termAmounts": [
+            {
+              "initialTermId": "1Y",
+              "amount": 1800,
+              "transactionUnitAmount": 0.24,
+              "transactionUnitOverageAmount": 0.28
+            },
+            {
+              "initialTermId": "3Y",
+              "amount": 1425,
+              "transactionUnitAmount": 0.19,
+              "transactionUnitOverageAmount": 0.23
+            },
+            {
+              "initialTermId": "5Y",
+              "amount": 1275,
+              "transactionUnitAmount": 0.17,
+              "transactionUnitOverageAmount": 0.21
+            }
+          ],
+          "discountItems": []
+        },
+        {
+          "internalName": "Silver Bundle Monthly Volume 3",
+          "minimumValue": 7501,
+          "maximumValue": 10000,
+          "amount": 1800,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.18,
+          "unit": "month",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "",
+          "isDefault": 0,
+          "sortOrder": 3,
+          "termAmounts": [
+            {
+              "initialTermId": "1Y",
+              "amount": 2300,
+              "transactionUnitAmount": 0.23,
+              "transactionUnitOverageAmount": 0.27
+            },
+            {
+              "initialTermId": "3Y",
+              "amount": 1800,
+              "transactionUnitAmount": 0.18,
+              "transactionUnitOverageAmount": 0.22
+            },
+            {
+              "initialTermId": "5Y",
+              "amount": 1600,
+              "transactionUnitAmount": 0.16,
+              "transactionUnitOverageAmount": 0.2
+            }
+          ],
+          "discountItems": []
+        }
+      ],
+      "discountItems": [],
+      "optionItems": [
+        {
+          "optionItemType": "Implementations",
+          "headerDescription": "<b>Accelerate your setup process.</b> Whether you prefer support of a DIY approach or need a comprehensive build-out in your environment, we've got you covered to get up and running swiftly and smoothly.",
+          "toolTipText": "",
+          "toolTipDescription": "",
+          "headerDescription2": "",
+          "toolTipText2": "",
+          "toolTipDescription2": "",
+          "customAttributes": [
+            {
+              "name": "optional_selection_type",
+              "description": "selection type",
+              "value": "checkbox",
+              "isRequired": 1,
+              "displayFor": 1,
+              "sortOrder": 0
+            }
+          ],
+          "discountItems": [],
+          "optionLineItems": [
+            {
+              "catalogCode": "10005327",
+              "internalName": "Direct Entry (Standard Implementation)",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "With </span><strong><span class='font5'>Standard Implementation</span></strong><span class='font6'>, our team configures the product and provides an overview. It also includes access to training videos and webinars so you can gain valuable insights and guidance.",
+              "amount": 399,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "one-time fee",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 0,
+              "customAttributes": [],
+              "termAmounts": [
+                {
+                  "initialTermId": "1Y",
+                  "amount": 599
+                },
+                {
+                  "initialTermId": "3Y",
+                  "amount": 399
+                },
+                {
+                  "initialTermId": "5Y",
+                  "amount": 199
+                }
+              ],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10002397",
+              "internalName": "Batch Entry (Batch File Implementation)",
+              "marketingTitle": "",
+              "tagline": "Recommended",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "With a </span><strong><span class='font5'>Batch File Implementation</span></strong><span class='font6'>, an FTP location will be provided so that your claims can be sent to the RPA solution via an x12 batch file using secure file transfer protocol (SFTP).",
+              "amount": 1096,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "one-time fee",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 0,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 1,
+              "customAttributes": [],
+              "termAmounts": [
+                {
+                  "initialTermId": "1Y",
+                  "amount": 500
+                },
+                {
+                  "initialTermId": "3Y",
+                  "amount": 250
+                },
+                {
+                  "initialTermId": "5Y",
+                  "amount": 150
+                }
+              ],
+              "discountItems": []
+            }
+          ]
+        },
+        {
+          "optionItemType": "Enrollments",
+          "headerDescription": "<b>Enrollments made easy.</b> Specify the number of enrollments you anticipate to streamline the process.",
+          "toolTipText": "",
+          "toolTipDescription": "",
+          "headerDescription2": "",
+          "toolTipText2": "",
+          "toolTipDescription2": "",
+          "customAttributes": [],
+          "discountItems": [],
+          "optionLineItems": [
+            {
+              "catalogCode": "10005337",
+              "internalName": "Managed Enrollments 1",
+              "marketingTitle": "",
+              "tagline": "Up to 20 enrollments",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "With <strong>Managed Enrollments</strong> (per payer enrollment form) our enrollment specialist will configure your user enrollments, and and you recieve a one-hour, one-on-one training session to facilitate a smooth process.<br />Each additional enrollment form: $25",
+              "amount": 500,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "for up to 20 enrollments",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 0,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 25,
+              "sortOrder": 0,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10005337-1",
+              "internalName": "Managed Enrollments 2",
+              "marketingTitle": "",
+              "tagline": "Up to 30 enrollments",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "With <strong>Managed Enrollments</strong> (per payer enrollment form) our enrollment specialist will configure your user enrollments, and and you recieve a one-hour, one-on-one training session to facilitate a smooth process.<br />Each additional enrollment form: $20",
+              "amount": 600,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "for up to 30 enrollments",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 0,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 30,
+              "sortOrder": 1,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10005337-2",
+              "internalName": "Managed Enrollments 3",
+              "marketingTitle": "",
+              "tagline": "Up to 50 enrollments",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "With <strong>Managed Enrollments</strong> (per payer enrollment form) our enrollment specialist will configure your user enrollments, and and you recieve a one-hour, one-on-one training session to facilitate a smooth process.<br />Each additional enrollment form: $15",
+              "amount": 750,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "for up to 50 enrollments",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 0,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 50,
+              "sortOrder": 2,
+              "customAttributes": [],
+              "discountItems": []
+            }
+          ]
+        },
+        {
+          "optionItemType": "Addons",
+          "headerDescription": "This list shows additional fees applied when monthly volume limits are exceeded on applicable bundle add-on items, plus the rate of charges for applicable pay-as-you go items.",
+          "toolTipText": "",
+          "toolTipDescription": "",
+          "headerDescription2": "These items are optional with your package selections. If chosen, the indicated fees will be charged based on your usage.",
+          "toolTipText2": "",
+          "toolTipDescription2": "",
+          "customAttributes": [],
+          "discountItems": [],
+          "optionLineItems": [
+            {
+              "catalogCode": "10004652",
+              "internalName": "Commercial Medical Attachments",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "<strong>Commercial Medical Attachments</strong> streamline your practice&rsquo;s workflow by letting your staff attach commercial medical documents directly to the claim and send it to the payer electronically.<br><br>For payers who don&rsquo;t accept digital attachments, we can send that attachment by fax or mail.",
+              "amount": 1,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "per attachment",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "per attachment",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 0,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10005072",
+              "internalName": "Workers' Comp Attachments",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "<strong><span class='font5'>Workers' Comp Attachments</span></strong><span class='font6'> streamline your practice&rsquo;s workflow by letting your staff attach workers' comp documents directly to the claim and send it to the payer electronically. <br> <br> For payers who don&rsquo;t accept digital attachments, we can send that attachment by fax or mail.</span>",
+              "amount": 1,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "per attachment",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "per attachment",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 1,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10005333",
+              "internalName": "Printed Claims",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "<strong><span class='font5'>Printed Claims</span></strong><span class='font6'> produces the primary claim on paper.</span>",
+              "amount": 1,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "per claim",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "per claim",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 2,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10004118",
+              "internalName": "Claims Submission and Tracking",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "<strong><span class='font5'>Claims Submission and Tracking</span></strong><span class='font6'> helps you avoid timely and costly resubmissions, including Medical Necessity and Correct Coding Initiative edits. <br> <br> It also gives you increased visibility into the entire process which helps you not only get it right, but get it done faster.</span>",
+              "amount": 0,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 1,
+              "unit": "per transaction",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 3,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10004117",
+              "internalName": "Eligibility and Benefits",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "<strong>Eligibility and Benefits</strong> provides batch requests, real-time requests, and/or an API to connect to over 1,500 payer connections that helps to:<br> <ul style='list-style-type: disc;'> <li>Reduce eligibility-based denials</li> <li>Lower costs associated with reworking denials</li> <li>Reduce bad-debt write-offs from uncovered, unpaid services</li> </ul>",
+              "amount": 0,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 1,
+              "unit": "per transaction",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 4,
+              "customAttributes": [],
+              "discountItems": []
+            },
+            {
+              "catalogCode": "10005332",
+              "internalName": "ERA/Payer Payments",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "<strong><span class='font5'>ERAs/Payer Payments</span></strong><span class='font6'> provides details concerning the adjudication of a claim.</span>",
+              "amount": 0,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 1,
+              "unit": "per transaction",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 5,
+              "customAttributes": [],
+              "discountItems": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "optionItems": []
+}

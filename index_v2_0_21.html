@@ -1,0 +1,2249 @@
+<!--
+v2.0.21
+- previewAddonAmount: falls back to transactionUnitAmount when amount is 0
+- loadJson: clears previewCheckedPackages on file load to prevent ghost selections
+- loadJson: resets previewAddonsOpen to false on file load
+
+v2.0.20
+- Fixed Add-ons expander in Optum preview
+- Add-ons accordion now opens/closes and renders top-level Addons option line items
+- Added add-on names, descriptions, amounts, units, and usage labels inside preview accordion
+- Updated frontend version and download filename version to v2.0.20
+
+v2.0.19
+- Fixed implementation waiver tooltip to append inline with implementation header description
+- Ensured implementation waiver content is hidden unless 2+ packages are selected
+- Kept payment schedule as a single innerHTML notice block
+
+v2.0.18
+- Fixed Optum preview word wrapping in Implementation section
+- Widened order summary column and allowed implementation descriptions to use available space
+- Added safer text wrapping rules for package tiers, notices, and payment schedule
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+Change Log:
+v2.0.17
+- Replaced generic card-based preview with Optum-fidelity pricing page replica
+- Preview now shows: category label, product name, header description (HTML),
+  discount tooltip, package cards with dotted leader tier rows, implementation
+  section with conditional 2+ package waiver logic, add-ons accordion,
+  order summary with live monthly subtotal, one-time fees accordion
+- Package checkboxes toggle and update order summary live
+- headerDescription, optionGroup headers, discount tooltips render as innerHTML
+- Fixed HTML title still showing v2.0.15
+- Fixed hardcoded _v2_0_16_ in download filename
+- Fixed misleading save warning alert text
+-->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pricing Editor v2.0.21</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2333;
+  --surface3: #21262d;
+  --border: #30363d;
+  --border2: #3d444d;
+  --amber: #d29922;
+  --amber-dim: #2a2010;
+  --green: #3fb950;
+  --green-dim: #0a2010;
+  --red: #f85149;
+  --red-dim: #2a0f0d;
+  --blue: #4493f8;
+  --blue-dim: #0d1e35;
+  --teal: #39c5cf;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --sans: Inter, Segoe UI, Arial, sans-serif;
+  --topbar-h: 46px;
+  --statusbar-h: 28px;
+  --nav-w: 205px;
+  --preview-w: 390px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; display: flex; flex-direction: column; }
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+.topbar { height: var(--topbar-h); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 14px; flex-shrink: 0; }
+.logo { font-family: var(--mono); color: var(--amber); font-size: 12px; font-weight: 700; letter-spacing: .08em; padding-right: 12px; border-right: 1px solid var(--border); white-space: nowrap; }
+.file-pill { display: flex; align-items: center; gap: 7px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text2); font-family: var(--mono); font-size: 11px; min-width: 240px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex: 0 0 auto; }
+.dot.dirty { background: var(--amber); }
+.spacer { flex: 1; }
+.btn { border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text2); padding: 6px 11px; font-size: 12px; }
+.btn:hover { border-color: var(--border2); color: var(--text); }
+.btn.primary { background: var(--amber); color: #0d1117; border-color: var(--amber); font-weight: 700; }
+.btn.green { color: var(--green); border-color: rgba(63,185,80,.45); }
+.btn.red { color: var(--red); border-color: rgba(248,81,73,.45); }
+.btn.blue { color: var(--blue); border-color: rgba(68,147,248,.45); }
+.validation-pill { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; padding: 4px 9px; border-radius: 5px; color: var(--green); background: var(--green-dim); border: 1px solid rgba(63,185,80,.35); }
+.validation-pill.warn { color: var(--red); background: var(--red-dim); border-color: rgba(248,81,73,.35); }
+.main { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+.nav { width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border); padding: 10px 0; overflow-y: auto; flex: 0 0 auto; }
+.nav-label { font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--text3); letter-spacing: .14em; text-transform: uppercase; padding: 10px 14px 4px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; color: var(--text2); border-left: 2px solid transparent; user-select: none; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--surface2); color: var(--amber); border-left-color: var(--amber); }
+.nav-icon { width: 16px; text-align: center; opacity: .8; }
+.nav-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); border: 1px solid var(--border); border-radius: 9px; padding: 1px 6px; }
+.nav-divider { height: 1px; background: var(--border); margin: 8px 0; }
+.editor { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 24px; }
+.preview { width: var(--preview-w); background: var(--surface); border-left: 1px solid var(--border); flex: 0 0 auto; display: flex; flex-direction: column; overflow: hidden; }
+.preview-tabs { display: flex; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.preview-tab { padding: 9px 14px; color: var(--text2); border-bottom: 2px solid transparent; user-select: none; }
+.preview-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.preview-body { flex: 1; min-height: 0; overflow: auto; padding: 14px; }
+.statusbar { height: var(--statusbar-h); background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 14px; color: var(--text3); font-family: var(--mono); font-size: 9px; flex: 0 0 auto; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.card-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.card-title { font-weight: 700; font-size: 12px; color: var(--text); }
+.card-sub { margin-left: auto; color: var(--text2); font-family: var(--mono); font-size: 10px; }
+.card-body { padding: 14px 16px; }
+.section-title { font-size: 18px; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+.section-title .sub { color: var(--text2); font-size: 11px; font-family: var(--mono); font-weight: 400; }
+.grid { display: grid; gap: 12px; }
+.cols1 { grid-template-columns: 1fr; }
+.cols2 { grid-template-columns: 1fr 1fr; }
+.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols4 { grid-template-columns: repeat(4, 1fr); }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+label { font-family: var(--mono); font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; }
+input, textarea, select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); padding: 7px 9px; outline: none; }
+textarea { min-height: 64px; resize: vertical; line-height: 1.45; }
+input:focus, textarea:focus, select:focus { border-color: var(--amber); }
+.help { color: var(--text3); font-size: 11px; margin-top: 4px; }
+.warnbox, .okbox { padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; font-size: 12px; }
+.warnbox { background: var(--red-dim); border: 1px solid rgba(248,81,73,.35); color: var(--red); }
+.okbox { background: var(--green-dim); border: 1px solid rgba(63,185,80,.35); color: var(--green); }
+.tabs { display: flex; gap: 0; overflow-x: auto; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.tab { padding: 9px 13px; white-space: nowrap; color: var(--text2); border-bottom: 2px solid transparent; user-select: none; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; color: var(--text3); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+td { padding: 5px 4px; border-bottom: 1px solid var(--surface2); vertical-align: top; }
+td input, td select { padding: 5px 6px; font-size: 12px; }
+.raw-json { width: 100%; min-height: 580px; font-family: var(--mono); font-size: 11px; line-height: 1.5; }
+.code { white-space: pre-wrap; font-family: var(--mono); font-size: 10px; line-height: 1.55; color: var(--text2); }
+.preview-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 11px 12px; margin-bottom: 10px; }
+.pp-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.pp-desc { color: var(--text2); font-size: 12px; line-height: 1.5; }
+.pp-price { color: var(--amber); font-family: var(--mono); font-size: 14px; margin-top: 6px; }
+.pp-head { color: var(--text3); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; margin: 14px 0 7px; }
+.badge { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 4px; color: var(--amber); background: var(--amber-dim); border: 1px solid rgba(210,153,34,.35); }
+.diff-grid { display: grid; gap: 10px; }
+.diff-row { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.diff-head { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--surface2); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text2); }
+.diff-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.diff-cell { padding: 9px 10px; min-width: 0; border-right: 1px solid var(--border); }
+.diff-cell:last-child { border-right: none; }
+.diff-label { font-family: var(--mono); font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.diff-value { font-family: var(--mono); font-size: 10px; color: var(--text2); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; }
+.diff-added { color: var(--green); }
+.diff-removed { color: var(--red); }
+.diff-changed { color: var(--amber); }
+.checkline { display: inline-flex; align-items: center; gap: 7px; color: var(--text2); font-size: 12px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.diff-row[data-section] { cursor: pointer; }
+.diff-row[data-section]:hover .diff-head { background: var(--surface3); }
+.diff-path { color: var(--text); }
+.search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.search-row input { flex: 1; }
+.hidden { display: none !important; }
+.empty { color: var(--text3); font-style: italic; padding: 8px 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+@media (max-width: 1100px) {
+  :root { --preview-w: 330px; --nav-w: 180px; }
+  .cols3, .cols4 { grid-template-columns: 1fr 1fr; }
+}
+
+/* v2.0.2 layout usability */
+.topbar { position: sticky; top: 0; z-index: 40; }
+.statusbar { position: sticky; bottom: 0; z-index: 40; }
+.nav { position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h) - var(--statusbar-h)); }
+.editor { height: calc(100vh - var(--topbar-h) - var(--statusbar-h)); scroll-behavior: smooth; }
+.preview { height: calc(100vh - var(--topbar-h) - var(--statusbar-h)); }
+.section-title { position: sticky; top: -22px; z-index: 20; background: linear-gradient(var(--bg) 70%, rgba(13,17,23,0)); padding: 0 0 12px; }
+.action-row.sticky-actions { position: sticky; top: 24px; z-index: 18; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--border); }
+/* v2.0.10 package layout spacing fix */
+.tabs.sticky-tabs { position: static; z-index: 1; }
+.package-tabs-wrap { margin-top: 14px; border-top: 1px solid var(--border); }
+.package-mode-row {
+  margin: 16px 0 18px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.package-mode-row .btn { margin-bottom: 0; }
+.package-editor-body { padding-top: 14px; }
+.package-shell-card { overflow: visible; }
+.package-shell-card > .tabs { border-radius: 8px 8px 0 0; }
+details.card { display: block; }
+details.card > summary.card-head { list-style: none; cursor: pointer; }
+details.card > summary.card-head::-webkit-details-marker { display: none; }
+details.card > summary.card-head::before { content: "▸"; color: var(--text3); font-family: var(--mono); font-size: 11px; transition: transform .12s; }
+details.card[open] > summary.card-head::before { transform: rotate(90deg); }
+details.card:not([open]) { margin-bottom: 10px; }
+details.card:not([open]) > summary.card-head { border-bottom: none; }
+.head-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.card-head .head-actions + .card-sub { margin-left: 0; }
+.table-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--border); border-radius: 6px; }
+.table-scroll table { margin-bottom: 0; min-width: 940px; }
+.compact-note { color: var(--text2); font-family: var(--mono); font-size: 10px; }
+.package-summary { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.summary-tile { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; }
+.summary-label { color: var(--text3); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.summary-value { color: var(--text); font-size: 13px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.raw-json { height: calc(100vh - var(--topbar-h) - var(--statusbar-h) - 170px); min-height: 520px; overflow: auto; }
+.code { max-height: calc(100vh - var(--topbar-h) - var(--statusbar-h) - 95px); overflow: auto; }
+.preview-card { overflow-wrap: anywhere; }
+@media (max-width: 1120px) {
+  :root { --preview-w: 330px; --nav-w: 190px; }
+  .cols3, .cols4 { grid-template-columns: 1fr 1fr; }
+  .package-summary { grid-template-columns: 1fr 1fr; }
+}
+
+
+/* v2.0.3 resizable and collapsible panels */
+.splitter {
+  width: 7px;
+  flex: 0 0 7px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  cursor: col-resize;
+  position: relative;
+  z-index: 25;
+}
+.splitter::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 2px;
+  height: 44px;
+  border-left: 1px solid var(--border2);
+  border-right: 1px solid var(--border2);
+  transform: translateY(-50%);
+  opacity: .7;
+}
+.splitter:hover, .splitter.dragging { background: var(--surface2); }
+.splitter:hover::after, .splitter.dragging::after { border-color: var(--amber); opacity: 1; }
+body.resizing { user-select: none; cursor: col-resize; }
+body.nav-collapsed { --nav-w: 48px; }
+body.nav-collapsed .nav { overflow-x: hidden; }
+body.nav-collapsed .nav-label { opacity: 0; height: 10px; padding: 7px 0 0; overflow: hidden; }
+body.nav-collapsed .nav-item { white-space: nowrap; gap: 18px; padding-left: 14px; }
+body.nav-collapsed .nav-badge { display: none; }
+body.preview-collapsed .preview,
+body.preview-collapsed #previewSplitter { display: none; }
+body.editor-collapsed .editor,
+body.editor-collapsed #previewSplitter { display: none; }
+body.editor-collapsed .preview { flex: 1 1 auto; width: auto; }
+.preview-restore-tab {
+  display: none;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: right bottom;
+  z-index: 80;
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(68,147,248,.45);
+  border-radius: 6px 6px 0 0;
+  padding: 6px 12px;
+  font-size: 11px;
+}
+body.preview-collapsed .preview-restore-tab { display: block; }
+body.nav-collapsed #toggleNavBtn,
+body.editor-collapsed #toggleEditorBtn,
+body.preview-collapsed #togglePreviewBtn { color: var(--amber); border-color: rgba(210,153,34,.55); background: var(--amber-dim); }
+.nav, .editor, .preview { transition: width .12s ease, flex-basis .12s ease; }
+body.resizing .nav, body.resizing .editor, body.resizing .preview { transition: none; }
+@media (max-width: 1120px) {
+  .splitter { width: 6px; flex-basis: 6px; }
+}
+
+/* v2.0.4 package actions and collapsible JSON windows */
+.json-window {
+  max-height: 340px;
+  overflow: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.55;
+  color: var(--text2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.raw-json-wrap .card-body { padding: 0; }
+.raw-json-wrap textarea.raw-json {
+  border: none;
+  border-radius: 0;
+  min-height: calc(100vh - 250px);
+  resize: vertical;
+}
+.package-action-help {
+  color: var(--text3);
+  font-size: 11px;
+  margin-top: -4px;
+  margin-bottom: 10px;
+}
+.package-action-row {
+  align-items: center;
+}
+
+
+/* v2.0.5 clearer metadata collapse controls */
+.section-title .title-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.section-title .btn {
+  padding: 4px 9px;
+  font-size: 11px;
+}
+details.card > summary.card-head::before {
+  font-size: 15px;
+  width: 18px;
+  color: var(--amber);
+  opacity: .95;
+}
+details.card > summary.card-head:hover::before {
+  color: var(--text);
+}
+.metadata-collapsed-note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.metadata-collapsed-note strong {
+  color: var(--text);
+}
+
+/* v2.0.6 vertical metadata panel collapse */
+details.section-panel {
+  background: transparent;
+  border: 0;
+  margin-bottom: 14px;
+}
+details.section-panel > summary.section-panel-head {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 0 10px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+details.section-panel > summary.section-panel-head::-webkit-details-marker { display: none; }
+details.section-panel > summary.section-panel-head::before {
+  content: '▾';
+  color: var(--amber);
+  font-size: 18px;
+  margin-right: 8px;
+  display: inline-block;
+  width: 18px;
+}
+details.section-panel:not([open]) > summary.section-panel-head::before {
+  content: '▸';
+}
+.section-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.section-panel-note {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-left: auto;
+}
+
+
+/* v2.0.9 monthly volume editor polish */
+.volume-issue-strip { display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 12px; }
+.issue-pill { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(210,153,34,.35); color: var(--amber); background: var(--amber-dim); }
+.issue-pill.error { border-color: rgba(248,81,73,.45); color: var(--red); background: var(--red-dim); }
+.issue-pill.ok { border-color: rgba(63,185,80,.35); color: var(--green); background: var(--green-dim); }
+.row-issue { outline: 1px solid rgba(248,81,73,.35); outline-offset: -1px; background: rgba(248,81,73,.035); }
+.row-warn { outline: 1px solid rgba(210,153,34,.35); outline-offset: -1px; background: rgba(210,153,34,.035); }
+.term-detail { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 6px 0 10px; }
+.term-detail summary { cursor:pointer; color: var(--blue); font-weight:600; }
+.term-grid { margin-top: 10px; }
+.tiny-actions { display:flex; gap:5px; flex-wrap:wrap; }
+.tiny-actions .btn { padding: 4px 7px; font-size: 11px; }
+
+
+/* v2.0.12 option items polish */
+/* v2.0.12 option item polish */
+.line-detail { background: rgba(13,17,23,.28); border-top: 1px solid var(--surface2); }
+.line-detail-inner { display: grid; gap: 10px; padding: 10px 8px 14px; }
+.readonly-chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.readonly-chip { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface3); color: var(--text2); }
+.option-line-table table { min-width: 1220px; }
+.option-action-cell { min-width: 285px; }
+.option-group-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.small-muted { color: var(--text3); font-size: 11px; }
+
+
+/* v2.0.14 nav inventory counts + save workflow cleanup */
+/* v2.0.15 compare versions polish */
+.nav-badge.count { color: var(--text2); border-color: var(--border); background: var(--surface2); }
+.nav-badge.issue { color: var(--amber); border-color: rgba(210,153,34,.45); background: var(--amber-dim); }
+.section-status { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--text2); }
+.section-status .status-pill { padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+.section-status .status-pill.warn { border-color: rgba(210,153,34,.45); background: var(--amber-dim); color: var(--amber); }
+.section-status .status-pill.error { border-color: rgba(248,81,73,.45); background: var(--red-dim); color: var(--red); }
+.save-history { display: flex; flex-direction: column; gap: 8px; }
+.save-history-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; font-family: var(--mono); font-size: 10px; color: var(--text2); border-bottom: 1px solid var(--border); padding: 6px 0; }
+.save-history-row:last-child { border-bottom: none; }
+
+/* v2.0.13 validation hardening */
+.nav-badge.warn { color: var(--amber); border-color: rgba(210,153,34,.45); background: var(--amber-dim); }
+.nav-badge.error { color: var(--red); border-color: rgba(248,81,73,.45); background: var(--red-dim); }
+.validation-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin: 12px 0; }
+.validation-summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; }
+.validation-summary-card .summary-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+.validation-summary-card .summary-count { font-size: 20px; font-weight: 700; margin-top: 4px; }
+.issue-group { margin-bottom: 14px; }
+.issue-row { border: 1px solid var(--border); background: var(--surface); border-radius: 7px; padding: 9px 11px; margin: 7px 0; cursor: pointer; display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: start; }
+.issue-row:hover { border-color: var(--border2); background: var(--surface2); }
+.issue-row.error { border-color: rgba(248,81,73,.32); }
+.issue-row.warning { border-color: rgba(210,153,34,.32); }
+.issue-severity { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; padding: 3px 6px; border-radius: 999px; text-align: center; }
+.issue-severity.error { color: var(--red); background: var(--red-dim); border: 1px solid rgba(248,81,73,.35); }
+.issue-severity.warning { color: var(--amber); background: var(--amber-dim); border: 1px solid rgba(210,153,34,.35); }
+.issue-path { font-family: var(--mono); color: var(--text3); font-size: 10px; margin-top: 3px; word-break: break-word; }
+.validation-filter-row { display: flex; gap: 8px; align-items: center; margin: 10px 0 14px; }
+.validation-filter-row input { max-width: 360px; }
+
+
+.card > .tabs.sticky-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0;
+}
+.card > .tabs.sticky-tabs .tab {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.package-mode-row {
+  position: relative;
+  z-index: 2;
+  clear: both;
+  margin: 14px 0 18px 0;
+  padding: 10px 0 0 0;
+}
+.package-mode-row .btn {
+  cursor: pointer;
+}
+
+
+/* v2.0.16 combined polish */
+.raw-error-box { border: 1px solid rgba(248,81,73,.45); background: var(--red-dim); color: var(--red); border-radius: 7px; padding: 10px 12px; margin: 8px 0; font-family: var(--mono); font-size: 11px; line-height: 1.5; }
+.raw-status-box { border: 1px solid var(--border); background: var(--surface2); color: var(--text2); border-radius: 7px; padding: 8px 10px; margin: 8px 0; font-size: 11px; }
+.attr-table table { min-width: 980px; }
+.attr-preview { border: 1px solid var(--border); background: var(--surface2); border-radius: 6px; padding: 9px 10px; color: var(--text2); line-height: 1.5; max-height: 110px; overflow: auto; }
+.preview-actions { display: flex; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface2); align-items: center; flex-shrink: 0; }
+body.preview-mode .topbar, body.preview-mode .nav, body.preview-mode #navSplitter, body.preview-mode #editor, body.preview-mode #previewSplitter, body.preview-mode .statusbar { display: none !important; }
+body.preview-mode .main { height: 100vh; }
+body.preview-mode .preview { width: 100vw !important; border-left: 0; }
+body.preview-mode .preview-tabs { display: none; }
+body.preview-mode .preview-body { padding: 0; }
+.preview-full-shell { max-width: 1180px; margin: 0 auto; padding: 24px; }
+.preview-package-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 10px 0 20px; }
+.preview-band-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-family: var(--mono); font-size: 10px; }
+.preview-band-table th, .preview-band-table td { padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: left; }
+.preview-exit { margin-left: auto; }
+.backend-status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+
+
+/* v2.0.17 Optum-fidelity preview */
+.op-preview-wrap { background: #15181e; font-family: var(--sans); color: #f0f4ff; padding: 18px 18px 40px; min-height: 100%; }
+.op-preview-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(235px, 260px); gap: 18px; align-items: flex-start; }
+.op-preview-left { min-width: 0; }
+.op-preview-right { position: sticky; top: 0; }
+.op-cat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #4a5870; margin-bottom: 8px; }
+.op-h1 { font-size: 22px; font-weight: 700; color: #f0f4ff; margin-bottom: 12px; line-height: 1.2; }
+.op-h2 { font-size: 15px; font-weight: 700; color: #f0f4ff; margin-bottom: 8px; margin-top: 2px; }
+.op-body-text { font-size: 12px; line-height: 1.6; color: #8fa3bb; margin-bottom: 6px; }
+.op-body-text b { color: #f0f4ff; font-weight: 700; }
+.op-notice-text { font-size: 11px; color: #4a5870; margin-bottom: 4px; line-height: 1.5; }
+.op-notice-text a { color: #1a8cff; }
+.op-discount-text { font-size: 12px; color: #8fa3bb; margin-bottom: 14px; line-height: 1.55; }
+.op-discount-text b { color: #f0f4ff; font-weight: 700; }
+.op-pkg-card { border: 1px solid #2a3040; border-radius: 5px; background: #1e2330; padding: 11px 13px; margin-bottom: 6px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; transition: border-color .15s; }
+.op-pkg-card:hover { border-color: #3a4255; }
+.op-pkg-card.op-sel { border-color: #1a8cff; }
+.op-pkg-cb { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; border: 2px solid #3a4255; border-radius: 3px; display: flex; align-items: center; justify-content: center; background: transparent; transition: all .15s; }
+.op-pkg-card.op-sel .op-pkg-cb { background: #1a8cff; border-color: #1a8cff; }
+.op-pkg-ck { display: none; }
+.op-pkg-card.op-sel .op-pkg-ck { display: block; }
+.op-pkg-left { flex: 1; min-width: 0; }
+.op-pkg-name { font-size: 12px; font-weight: 700; color: #f0f4ff; margin-bottom: 1px; }
+.op-pkg-price { font-size: 12px; font-weight: 700; color: #00b050; }
+.op-pkg-sub { font-size: 10px; color: #4a5870; margin-top: 1px; }
+.op-pkg-right { flex-shrink: 0; min-width: 155px; }
+.op-tier-row { display: flex; align-items: baseline; font-size: 10px; color: #8fa3bb; padding: 1px 0; gap: 3px; white-space: nowrap; }
+.op-tier-range { flex-shrink: 0; min-width: 98px; }
+.op-tier-dots { flex: 1; border-bottom: 1px dotted #3a4255; margin: 0 3px 2px; height: 1px; align-self: flex-end; min-width: 4px; }
+.op-tier-price { flex-shrink: 0; text-align: right; }
+.op-section-divider { height: 1px; background: #2a3040; margin: 14px 0; }
+.op-section-sublabel { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #4a5870; margin-bottom: 6px; }
+.op-impl-card { border: 1px solid #2a3040; border-radius: 5px; background: #1e2330; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: flex-start; gap: 18px; margin-bottom: 6px; }
+.op-impl-name { font-size: 11px; font-weight: 700; color: #f0f4ff; margin-bottom: 3px; }
+.op-impl-desc { font-size: 10px; color: #8fa3bb; line-height: 1.55; max-width: none; overflow-wrap: anywhere; }
+.op-impl-desc a { color: #1a8cff; }
+.op-impl-price-col { text-align: right; flex-shrink: 0; }
+.op-impl-orig { font-size: 11px; color: #4a5870; text-decoration: line-through; }
+.op-impl-new { font-size: 13px; font-weight: 700; color: #00b050; }
+.op-impl-unit { font-size: 10px; color: #4a5870; }
+.op-addon-row { border: 1px solid #2a3040; border-radius: 5px; background: #1e2330; padding: 9px 13px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.op-addon-row-label { font-size: 12px; font-weight: 600; color: #f0f4ff; }
+.op-addon-expand-btn { width: 20px; height: 20px; border-radius: 50%; background: #1a8cff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform .18s ease; }
+.op-addon-row.op-open .op-addon-expand-btn { transform: rotate(180deg); }
+.op-addon-body { border: 1px solid #2a3040; border-top: none; border-radius: 0 0 5px 5px; background: #171b24; padding: 8px 10px; display: flex; flex-direction: column; gap: 7px; }
+.op-addon-item { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.5fr) auto; gap: 10px; align-items: start; padding: 8px 6px; border-bottom: 1px solid #2a3040; }
+.op-addon-item:last-child { border-bottom: none; }
+.op-addon-name { font-size: 11px; font-weight: 700; color: #f0f4ff; line-height: 1.35; }
+.op-addon-desc { font-size: 10px; color: #8fa3bb; line-height: 1.45; overflow-wrap: anywhere; }
+.op-addon-price { text-align: right; font-size: 11px; font-weight: 700; color: #00b050; white-space: nowrap; }
+.op-addon-unit { display: block; font-size: 9px; font-weight: 400; color: #4a5870; margin-top: 2px; }
+@media (max-width: 760px) { .op-addon-item { grid-template-columns: 1fr; } .op-addon-price { text-align: left; } }
+.op-payment-notice { font-size: 10px; color: #4a5870; border-top: 1px solid #2a3040; padding-top: 10px; margin-top: 12px; line-height: 1.5; }
+.op-summary-box { background: #1e2330; border: 1px solid #2a3040; border-radius: 6px; padding: 12px; }
+.op-summary-title { font-size: 12px; font-weight: 700; color: #f0f4ff; margin-bottom: 10px; }
+.op-costs-head { display: flex; align-items: center; justify-content: space-between; background: #252b38; border: 1px solid #2a3040; border-radius: 4px; padding: 6px 9px; font-size: 11px; font-weight: 600; color: #f0f4ff; margin-bottom: 8px; }
+.op-sum-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #2a3040; }
+.op-sum-row:last-child { border: none; }
+.op-sum-lbl { color: #8fa3bb; }
+.op-sum-val { font-weight: 600; color: #f0f4ff; }
+.op-sum-val.op-big { font-size: 13px; }
+.op-otf-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 6px 0; border-top: 1px solid #2a3040; margin-top: 6px; }
+.op-otf-title { font-size: 11px; font-weight: 600; color: #8fa3bb; }
+.op-otf-body { padding-top: 5px; display: flex; flex-direction: column; gap: 3px; }
+.op-otf-row { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; }
+.op-otf-lbl { color: #8fa3bb; }
+.op-otf-val { color: #f0f4ff; }
+.op-otf-val.op-disc { color: #00b050; }
+.op-sum-divider { height: 1px; background: #2a3040; margin: 8px 0; }
+.op-promo-row { display: flex; gap: 5px; margin-bottom: 7px; }
+.op-promo-row input { font-size: 10px; padding: 4px 7px; border-radius: 4px; flex: 1; }
+.op-promo-row button { font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid #3a4255; color: #8fa3bb; border-radius: 4px; cursor: pointer; }
+.op-checkout-btn { width: 100%; padding: 10px; background: #1a8cff; color: #fff; font-size: 12px; font-weight: 700; border: none; border-radius: 5px; cursor: default; margin-top: 10px; }
+.op-save-link { display: block; text-align: center; color: #1a8cff; font-size: 11px; margin-top: 7px; text-decoration: underline; cursor: pointer; }
+.op-help-box { border: 1px solid #2a3040; border-radius: 6px; padding: 12px; margin-top: 10px; text-align: center; }
+.op-help-title { font-size: 13px; font-weight: 700; color: #f0f4ff; margin-bottom: 5px; }
+.op-help-link { color: #1a8cff; font-size: 11px; text-decoration: underline; display: block; margin-bottom: 5px; }
+.op-help-desc { font-size: 10px; color: #8fa3bb; line-height: 1.5; margin-bottom: 7px; }
+.op-help-btn { width: 100%; padding: 6px; background: transparent; border: 1px solid #3a4255; color: #f0f4ff; font-size: 11px; border-radius: 4px; cursor: pointer; }
+/* v2.0.18 Optum preview wrapping fixes */
+.op-body-text, .op-discount-text, .op-notice-text, .op-payment-notice { overflow-wrap: anywhere; }
+.op-impl-card > div:first-child { min-width: 0; }
+.op-impl-price-col { min-width: 72px; }
+.op-pkg-left { overflow-wrap: anywhere; }
+.op-tier-range { min-width: 112px; }
+@media (max-width: 720px) {
+  .op-preview-cols { grid-template-columns: 1fr; }
+  .op-preview-right { position: static; }
+  .op-impl-card { grid-template-columns: 1fr; }
+  .op-impl-price-col { text-align: left; }
+}
+
+
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">PRICING EDITOR</div>
+    <div class="file-pill"><span id="dirtyDot" class="dot"></span><span id="fileName">No file loaded</span></div>
+    <button class="btn blue" id="openBtn">Open JSON</button>
+    <input type="file" id="fileInput" accept="application/json,.json" class="hidden" />
+    <button class="btn" id="discardBtn">Discard</button>
+    <button class="btn green" id="validateBtn">Validate</button>
+    <button class="btn primary" id="saveBtn">Save Copy</button>
+    <button class="btn" id="downloadBtn">Download JSON</button>
+    <button class="btn" id="toggleNavBtn" title="Collapse or expand left navigation">☰ Nav</button>
+    <button class="btn" id="toggleEditorBtn" title="Collapse or expand center editor">▤ Editor</button>
+    <button class="btn" id="togglePreviewBtn" title="Collapse or expand right preview">▣ Preview</button>
+    <button class="btn primary" id="previewModeBtn" title="Full preview mode">Preview Mode</button>
+    <button class="btn" id="resetLayoutBtn" title="Reset panel widths">Reset Layout</button>
+    <div class="spacer"></div>
+    <div id="validationPill" class="validation-pill">No validation yet</div>
+  </div>
+
+  <div class="main">
+    <nav id="leftNav" class="nav">
+      <div class="nav-label">Sections</div>
+      <div class="nav-item active" data-section="metadata"><span class="nav-icon">⊞</span> Metadata <span id="metadataBadge" class="nav-badge hidden">0</span></div>
+      <div class="nav-item" data-section="contracts"><span class="nav-icon">◑</span> Contract Terms <span id="contractsBadge" class="nav-badge count hidden">0</span></div>
+      <div class="nav-item" data-section="packages"><span class="nav-icon">◈</span> Packages <span id="pkgBadge" class="nav-badge count">0</span></div>
+      <div class="nav-item" data-section="options"><span class="nav-icon">◇</span> Option Items <span id="optionsBadge" class="nav-badge count hidden">0</span></div>
+      <div class="nav-item" data-section="custom"><span class="nav-icon">⊙</span> Custom Attrs <span id="customBadge" class="nav-badge count hidden">0</span></div>
+      <div class="nav-divider"></div>
+      <div class="nav-label">Tools</div>
+      <div class="nav-item" data-section="save"><span class="nav-icon">▣</span> Save / Export</div>
+      <div class="nav-item" data-section="validation"><span class="nav-icon">✓</span> Validation <span id="validationBadge" class="nav-badge issue hidden">0</span></div>
+      <div class="nav-item" data-section="compare"><span class="nav-icon">⊡</span> Compare Versions</div>
+      <div class="nav-item" data-section="raw"><span class="nav-icon">⌥</span> Raw JSON</div>
+    </nav>
+
+    <div id="navSplitter" class="splitter" title="Drag to resize left nav. Double click to reset."></div>
+
+    <main id="editor" class="editor"></main>
+
+    <div id="previewSplitter" class="splitter" title="Drag to resize right preview. Double click to reset."></div>
+
+    <aside id="previewPanel" class="preview">
+      <div class="preview-tabs">
+        <div class="preview-tab active" data-preview="pricing">Pricing Preview</div>
+        <div class="preview-tab" data-preview="json">JSON</div>
+      </div>
+      <div id="previewBody" class="preview-body"></div>
+    </aside>
+    <button id="previewRestoreTab" class="preview-restore-tab" title="Reopen preview">Preview</button>
+  </div>
+
+  <div class="statusbar">
+    <span id="statusFile">file: none</span>
+    <span id="statusDirty">saved</span>
+    <span id="statusValidation">validation: not run</span>
+    <span id="statusPath">path: blank</span>
+  </div>
+
+<script>
+const APP_VERSION = "v2.0.20";
+const APP_VERSION_JS = "v2_0_21";
+let originalData = null;
+let data = null;
+let currentSection = "metadata";
+let currentPreview = "pricing";
+let currentFileName = "No file loaded";
+let currentFilePath = "";
+let dirty = false;
+let validationErrors = [];
+let validationIssues = [];
+let validationFilter = "";
+let validationRan = false;
+let activePackageIndex = 0;
+let activePackageMode = "details";
+let browserFileHandle = null;
+let lastSaveMessage = "No save or download yet.";
+let saveHistory = loadSaveHistory();
+let metadataCollapsed = localStorage.getItem("pricingEditorMetadataCollapsedV205") === "true";
+
+const editor = document.getElementById("editor");
+const previewBody = document.getElementById("previewBody");
+const fileInput = document.getElementById("fileInput");
+
+const layoutDefaults = { navWidth: 205, previewWidth: 390, navCollapsed: false, editorCollapsed: false, previewCollapsed: false };
+let layoutState = { ...layoutDefaults };
+
+function clampNumber(value, min, max) {
+  const n = Number(value);
+  if (Number.isNaN(n)) return min;
+  return Math.max(min, Math.min(max, n));
+}
+function loadLayoutState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("pricingEditorLayoutV203") || "{}");
+    layoutState = { ...layoutDefaults, ...saved };
+  } catch (_) {
+    layoutState = { ...layoutDefaults };
+  }
+  layoutState.navWidth = clampNumber(layoutState.navWidth, 48, 380);
+  layoutState.previewWidth = clampNumber(layoutState.previewWidth, 260, 1400);
+}
+function saveLayoutState() {
+  localStorage.setItem("pricingEditorLayoutV203", JSON.stringify(layoutState));
+}
+function applyLayoutState() {
+  document.documentElement.style.setProperty("--nav-w", `${layoutState.navCollapsed ? 48 : layoutState.navWidth}px`);
+  document.documentElement.style.setProperty("--preview-w", `${layoutState.previewWidth}px`);
+  document.body.classList.toggle("nav-collapsed", !!layoutState.navCollapsed);
+  document.body.classList.toggle("editor-collapsed", !!layoutState.editorCollapsed);
+  document.body.classList.toggle("preview-collapsed", !!layoutState.previewCollapsed);
+  const navBtn = document.getElementById("toggleNavBtn");
+  const editorBtn = document.getElementById("toggleEditorBtn");
+  const previewBtn = document.getElementById("togglePreviewBtn");
+  if (navBtn) navBtn.textContent = layoutState.navCollapsed ? "☰ Open" : "☰ Nav";
+  if (editorBtn) editorBtn.textContent = layoutState.editorCollapsed ? "▤ Open" : "▤ Editor";
+  if (previewBtn) previewBtn.textContent = layoutState.previewCollapsed ? "▣ Open" : "▣ Preview";
+}
+function resetLayoutState() {
+  layoutState = { ...layoutDefaults };
+  saveLayoutState();
+  applyLayoutState();
+}
+function setupPanelResizing() {
+  loadLayoutState();
+  applyLayoutState();
+
+  const mainEl = document.querySelector(".main");
+  const navSplitter = document.getElementById("navSplitter");
+  const previewSplitter = document.getElementById("previewSplitter");
+  const navBtn = document.getElementById("toggleNavBtn");
+  const editorBtn = document.getElementById("toggleEditorBtn");
+  const previewBtn = document.getElementById("togglePreviewBtn");
+  const resetBtn = document.getElementById("resetLayoutBtn");
+  const restoreTab = document.getElementById("previewRestoreTab");
+
+  function startDrag(splitter, mode, event) {
+    event.preventDefault();
+    document.body.classList.add("resizing");
+    splitter.classList.add("dragging");
+
+    function onMove(e) {
+      const rect = mainEl.getBoundingClientRect();
+      if (mode === "nav") {
+        layoutState.navCollapsed = false;
+        layoutState.navWidth = clampNumber(e.clientX - rect.left, 140, 380);
+      } else {
+        layoutState.editorCollapsed = false;
+        layoutState.previewCollapsed = false;
+        const navVisibleWidth = layoutState.navCollapsed ? 48 : layoutState.navWidth;
+        const maxPreviewWidth = Math.max(260, rect.width - navVisibleWidth - 300);
+        layoutState.previewWidth = clampNumber(rect.right - e.clientX, 260, maxPreviewWidth);
+      }
+      applyLayoutState();
+    }
+    function onUp() {
+      document.body.classList.remove("resizing");
+      splitter.classList.remove("dragging");
+      saveLayoutState();
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
+  navSplitter.addEventListener("mousedown", e => startDrag(navSplitter, "nav", e));
+  previewSplitter.addEventListener("mousedown", e => startDrag(previewSplitter, "preview", e));
+  navSplitter.addEventListener("dblclick", resetLayoutState);
+  previewSplitter.addEventListener("dblclick", resetLayoutState);
+
+  navBtn.onclick = () => {
+    layoutState.navCollapsed = !layoutState.navCollapsed;
+    saveLayoutState();
+    applyLayoutState();
+  };
+  editorBtn.onclick = () => {
+    layoutState.editorCollapsed = !layoutState.editorCollapsed;
+    if (layoutState.editorCollapsed) {
+      layoutState.previewCollapsed = false;
+    }
+    saveLayoutState();
+    applyLayoutState();
+  };
+  previewBtn.onclick = () => {
+    layoutState.previewCollapsed = !layoutState.previewCollapsed;
+    if (layoutState.previewCollapsed && layoutState.editorCollapsed) {
+      layoutState.editorCollapsed = false;
+    }
+    saveLayoutState();
+    applyLayoutState();
+  };
+  restoreTab.onclick = () => {
+    layoutState.previewCollapsed = false;
+    saveLayoutState();
+    applyLayoutState();
+  };
+  resetBtn.onclick = resetLayoutState;
+}
+
+
+function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+function money(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const n = Number(value);
+  if (Number.isNaN(n)) return "$" + value;
+  return n % 1 === 0 ? "$" + n.toLocaleString() : "$" + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+function cleanText(value) {
+  if (!value) return "";
+  const div = document.createElement("div");
+  div.innerHTML = String(value).replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<\/li>/gi, "\n").replace(/<li[^>]*>/gi, "• ");
+  return (div.textContent || div.innerText || "").replace(/\n{3,}/g, "\n\n").replace(/[ \t]+/g, " ").trim();
+}
+function truncate(value, max) {
+  const text = cleanText(value);
+  return text.length > max ? text.slice(0, max - 1).trimEnd() + "…" : text;
+}
+function jsonParseDetails(text, err) {
+  const message = err && err.message ? err.message : String(err || "Invalid JSON");
+  const match = message.match(/position\s+(\d+)/i);
+  if (!match) return {message, line: null, column: null, position: null};
+  const position = Number(match[1]);
+  const before = text.slice(0, position);
+  const lines = before.split(/\r?\n/);
+  return {message, line: lines.length, column: lines[lines.length - 1].length + 1, position};
+}
+function rawDiffersFromEdited(rawText) {
+  return rawText !== JSON.stringify(data, null, 2);
+}
+function safeHtmlPreview(value) {
+  const cleaned = cleanText(value);
+  return cleaned ? esc(cleaned) : '<span class="small-muted">No preview.</span>';
+}
+function byPath(path) {
+  const parts = path.split(".");
+  let obj = data;
+  for (const p of parts) {
+    if (obj == null) return undefined;
+    obj = obj[p];
+  }
+  return obj;
+}
+function setByPath(path, value) {
+  const parts = path.split(".");
+  let obj = data;
+  for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length - 1]] = value;
+  markDirty();
+}
+function parseInputValue(raw, current) {
+  if (typeof current === "number") {
+    if (raw === "") return 0;
+    const n = Number(raw);
+    return Number.isNaN(n) ? raw : n;
+  }
+  if (typeof current === "boolean") return raw === "true";
+  return raw;
+}
+function markDirty() {
+  dirty = true;
+  runFrontendValidation(false);
+  validationRan = false;
+  updateShell();
+  renderPreview();
+}
+function markSaved(updateBaseline = true) {
+  dirty = false;
+  if (updateBaseline && data) originalData = clone(data);
+  updateShell();
+}
+function ensureLoaded() {
+  if (data) return true;
+  editor.innerHTML = `<div class="section-title">Open a JSON file <span class="sub">${APP_VERSION} frontend</span></div><div class="card"><div class="card-body"><p>Select Open JSON to load a pricing file.</p><p class="help">After loading, edit fields in the left sections and validate before saving.</p></div></div>`;
+  previewBody.innerHTML = `<div class="empty">No JSON loaded.</div>`;
+  return false;
+}
+
+function field(path, label, type = "text", opts = {}) {
+  const current = byPath(path);
+  const value = current ?? "";
+  const rows = opts.rows || 3;
+  if (type === "textarea") {
+    return `<div class="field"><label>${esc(label)}</label><textarea rows="${rows}" data-path="${esc(path)}">${esc(value)}</textarea>${opts.help ? `<div class="help">${esc(opts.help)}</div>` : ""}</div>`;
+  }
+  if (type === "select") {
+    const options = opts.options || [];
+    return `<div class="field"><label>${esc(label)}</label><select data-path="${esc(path)}">${options.map(o => `<option value="${esc(o.value)}" ${String(value) === String(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select></div>`;
+  }
+  return `<div class="field"><label>${esc(label)}</label><input type="${esc(type)}" value="${esc(value)}" data-path="${esc(path)}" /></div>`;
+}
+function bindPathInputs(root = editor) {
+  root.querySelectorAll("[data-path]").forEach(el => {
+    el.addEventListener("input", () => {
+      const current = byPath(el.dataset.path);
+      setByPath(el.dataset.path, parseInputValue(el.value, current));
+    });
+    el.addEventListener("change", () => {
+      const current = byPath(el.dataset.path);
+      setByPath(el.dataset.path, parseInputValue(el.value, current));
+    });
+  });
+}
+function bindIndexedInputs(root = editor) {
+  root.querySelectorAll("[data-index-path]").forEach(el => {
+    el.addEventListener("input", () => {
+      const path = el.dataset.indexPath;
+      const current = getIndexPath(path);
+      setIndexPath(path, parseInputValue(el.value, current));
+    });
+    el.addEventListener("change", () => {
+      const path = el.dataset.indexPath;
+      const current = getIndexPath(path);
+      setIndexPath(path, parseInputValue(el.value, current));
+    });
+  });
+}
+function getIndexPath(path) {
+  const parts = path.split(".");
+  let obj = data;
+  for (const part of parts) obj = obj?.[part];
+  return obj;
+}
+function setIndexPath(path, value) {
+  const parts = path.split(".");
+  let obj = data;
+  for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length - 1]] = value;
+  markDirty();
+}
+function inputForIndex(path, value, type = "text") {
+  return `<input type="${esc(type)}" value="${esc(value ?? "")}" data-index-path="${esc(path)}" />`;
+}
+function textareaForIndex(path, value) {
+  return `<textarea data-index-path="${esc(path)}">${esc(value ?? "")}</textarea>`;
+}
+
+function render() {
+  if (!ensureLoaded()) return;
+  if (currentSection === "metadata") renderMetadata();
+  if (currentSection === "contracts") renderContracts();
+  if (currentSection === "packages") renderPackages();
+  if (currentSection === "options") renderOptions();
+  if (currentSection === "custom") renderCustomAttrs();
+  if (currentSection === "save") renderSaveExport();
+  if (currentSection === "validation") renderValidation();
+  if (currentSection === "compare") renderCompare();
+  if (currentSection === "raw") renderRawJson();
+  updateShell();
+  renderPreview();
+}
+
+function collapsibleCard(title, body, options = {}) {
+  const open = options.open === false ? "" : " open";
+  const sub = options.sub ? `<div class="card-sub">${esc(options.sub)}</div>` : "";
+  const badge = options.badge ? `<span class="badge">${esc(options.badge)}</span>` : "";
+  const headExtra = options.headExtra ? `<span class="head-actions" onclick="event.stopPropagation()">${options.headExtra}</span>` : "";
+  const bodyClass = options.bodyClass || "";
+  return `<details class="card collapsible"${open}><summary class="card-head"><div class="card-title">${esc(title)}</div>${badge}${sub}${headExtra}</summary><div class="card-body ${bodyClass}">${body}</div></details>`;
+}
+function stickyActions(html) {
+  return `<div class="action-row sticky-actions">${html}</div>`;
+}
+function copyCurrentJson() {
+  if (!data) return;
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+    .then(() => { lastSaveMessage = "Current JSON copied to clipboard."; updateShell(); })
+    .catch(() => alert("Unable to copy JSON to clipboard."));
+}
+
+
+function loadSaveHistory() {
+  try { return JSON.parse(localStorage.getItem("pricingEditorSaveHistoryV214") || "[]"); }
+  catch (_) { return []; }
+}
+function saveSaveHistory() {
+  localStorage.setItem("pricingEditorSaveHistoryV214", JSON.stringify(saveHistory.slice(0, 8)));
+}
+function addSaveHistory(type, name, path = "") {
+  const when = new Date().toLocaleString();
+  saveHistory.unshift({type, name, path, when});
+  saveHistory = saveHistory.slice(0, 8);
+  saveSaveHistory();
+}
+function pathStoreKey(name = currentFileName) {
+  return "pricingEditorPathV214:" + String(name || "").toLowerCase();
+}
+function rememberCurrentPath() {
+  if (currentFileName && currentFilePath && currentFilePath.toLowerCase().endsWith(".json")) {
+    localStorage.setItem(pathStoreKey(currentFileName), currentFilePath);
+    localStorage.setItem("pricingEditorLastPathV214", currentFilePath);
+  }
+}
+function recallPathForFile(name) {
+  return localStorage.getItem(pathStoreKey(name)) || "";
+}
+function sectionIssueCounts(section) {
+  const issues = runFrontendValidation(false).filter(i => i.section === section || (section === "packages" && i.section === "packages"));
+  return {
+    errors: issues.filter(i => i.severity === "error").length,
+    warnings: issues.filter(i => i.severity !== "error").length,
+    total: issues.length,
+  };
+}
+function sectionStatusHtml(section) {
+  if (!data) return "";
+  const counts = sectionIssueCounts(section);
+  if (!counts.total) return `<span class="section-status"><span class="status-pill">0 issues</span></span>`;
+  const cls = counts.errors ? "error" : "warn";
+  const text = counts.errors ? `${counts.errors} error(s), ${counts.warnings} warning(s)` : `${counts.warnings} warning(s)`;
+  return `<span class="section-status"><span class="status-pill ${cls}">${esc(text)}</span></span>`;
+}
+function sectionTitle(label, sub, section) {
+  return `<div class="section-title">${esc(label)} <span class="sub">${esc(sub || "")}</span>${sectionStatusHtml(section)}</div>`;
+}
+function saveHistoryHtml() {
+  if (!saveHistory.length) return `<div class="empty">No save or download actions yet this session.</div>`;
+  return `<div class="save-history">${saveHistory.map(row => `<div class="save-history-row"><div>${esc(row.when)}</div><div>${esc(row.type)}: ${esc(row.name || "")}${row.path ? `<br><span class="help">${esc(row.path)}</span>` : ""}</div></div>`).join("")}</div>`;
+}
+function confirmCanReplaceOpenFile() {
+  return !dirty || confirm("You have unsaved changes. Opening another JSON file will discard them. Continue?");
+}
+
+function setMetadataCollapsed(collapsed) {
+  metadataCollapsed = !!collapsed;
+  localStorage.setItem("pricingEditorMetadataCollapsedV205", metadataCollapsed ? "true" : "false");
+  renderMetadata();
+}
+function metadataPanelHead() {
+  return `<summary class="section-title section-panel-head">Metadata <span class="sub">top-level product fields</span>${sectionStatusHtml("metadata")}<span class="section-panel-note">Click this header to collapse or expand vertically</span></summary>`;
+}
+function bindMetadataPanelCollapse() {
+  const panel = document.getElementById("metadataPanel");
+  if (!panel) return;
+  panel.addEventListener("toggle", () => {
+    metadataCollapsed = !panel.open;
+    localStorage.setItem("pricingEditorMetadataCollapsedV205", metadataCollapsed ? "true" : "false");
+  });
+}
+
+function renderMetadata() {
+  const panelOpen = metadataCollapsed ? "" : " open";
+  editor.innerHTML = `
+    <details id="metadataPanel" class="section-panel"${panelOpen}>
+      ${metadataPanelHead()}
+      <div class="section-panel-body">
+        ${collapsibleCard("Product Identity", `<div class="grid cols3">
+          ${field("name", "Name")}
+          ${field("slug", "Slug")}
+          ${field("catalogCode", "Catalog Code")}
+          ${field("description", "Description")}
+          ${field("viewTemplate", "View Template")}
+          ${field("maxQuantity", "Max Quantity", "number")}
+        </div>`, {open: true})}
+        ${collapsibleCard("Marketing Copy", `<div class="grid cols1">
+          ${field("headerDescription", "Header Description", "textarea", {rows: 4, help: "HTML is preserved."})}
+          ${field("paymentSchedule", "Payment Schedule", "textarea", {rows: 3})}
+          <div class="grid cols2">${field("toolTipText", "Tooltip Text")}${field("toolTipDescription", "Tooltip Description")}</div>
+          ${field("imageName", "Image Name")}
+        </div>`, {badge: "HTML", open: true})}
+        ${renderItemContactCard()}
+        ${collapsibleCard("Save Target", `<div class="field"><label>Full path for backend save</label><input id="pathInput" value="${esc(currentFilePath)}" placeholder="Example: C:\Dell Inspirion\JSON Editor\item_mn__08092024.json" /></div>
+          <div class="help">Chrome does not expose the full opened file path. Enter the source path here to use Save Version through FastAPI.</div>`, {open: false})}
+        ${collapsibleCard("JSON Snapshot", `<div class="action-row"><button class="btn blue" id="copyMetadataJson">Copy Current JSON</button><button class="btn" onclick="document.querySelector('[data-section=raw]').click()">Open Raw JSON Editor</button></div><pre class="json-window">${esc(JSON.stringify(data, null, 2))}</pre>`, {sub: "read-only", open: false})}
+      </div>
+    </details>`;
+  bindMetadataPanelCollapse();
+  bindPathInputs();
+  const pathInput = document.getElementById("pathInput");
+  if (pathInput) pathInput.addEventListener("input", e => { currentFilePath = e.target.value; rememberCurrentPath(); updateShell(); });
+  const copyBtn = document.getElementById("copyMetadataJson");
+  if (copyBtn) copyBtn.onclick = () => copyCurrentJson();
+}
+
+function renderItemContactCard() {
+  if (!data.itemContact || typeof data.itemContact !== "object") return "";
+  return collapsibleCard("Contact", `<div class="grid cols3">
+    ${field("itemContact.email", "Email")}
+    ${field("itemContact.emailSubject", "Email Subject")}
+    ${field("itemContact.emailBody", "Email Body")}
+  </div>`, {open: false});
+}
+function renderContracts() {
+  data.contractTerms = data.contractTerms || {};
+  data.contractTerms.contractInitialTerm = data.contractTerms.contractInitialTerm || [];
+  data.contractTerms.contractAutoRenewalTerm = data.contractTerms.contractAutoRenewalTerm || [];
+  const terms = data.contractTerms.contractInitialTerm;
+  const auto = data.contractTerms.contractAutoRenewalTerm;
+  editor.innerHTML = `
+    ${sectionTitle("Contract Terms", "initial and auto-renewal", "contracts")}
+    ${stickyActions(`<button class="btn green" id="addTerm">+ Add Initial Term</button><button class="btn green" id="addAutoTerm">+ Add Auto-Renewal Term</button>`)}
+    ${collapsibleCard("Header Copy", `<div class="grid cols2">
+      ${field("contractTerms.headerDescription", "Header Description", "textarea")}
+      ${field("contractTerms.isAutoRenewalEnabled", "Auto Renewal Enabled", "select", {options: [{value: 0, label: "No"}, {value: 1, label: "Yes"}]})}
+    </div>`, {open: true})}
+    ${collapsibleCard("Initial Terms", renderTermsTable("contractInitialTerm", terms), {sub: `${terms.length} terms`, open: true})}
+    ${collapsibleCard("Auto Renewal Terms", renderTermsTable("contractAutoRenewalTerm", auto), {sub: `${auto.length} terms`, open: false})}`;
+  bindPathInputs();
+  bindIndexedInputs();
+  document.getElementById("addTerm").onclick = () => { terms.push(defaultContractTerm(terms.length)); markDirty(); render(); };
+  document.getElementById("addAutoTerm").onclick = () => { auto.push(defaultContractTerm(auto.length)); markDirty(); render(); };
+  editor.querySelectorAll("[data-set-default-term]").forEach(btn => btn.onclick = () => {
+    const group = data.contractTerms[btn.dataset.group];
+    group.forEach((term, idx) => { term.isDefault = idx === Number(btn.dataset.setDefaultTerm) ? 1 : 0; });
+    markDirty(); render();
+  });
+  editor.querySelectorAll("[data-del-term]").forEach(btn => btn.onclick = () => {
+    data.contractTerms[btn.dataset.group].splice(Number(btn.dataset.delTerm), 1);
+    normalizeSort(data.contractTerms[btn.dataset.group]);
+    markDirty(); render();
+  });
+}
+function renderTermsTable(groupName, terms) {
+  if (!terms.length) return `<div class="empty">No terms defined.</div>`;
+  return `<div class="table-scroll"><table><thead><tr><th>Value</th><th>Unit</th><th>Description</th><th>Default</th><th>Sort</th><th></th></tr></thead><tbody>${terms.map((t, i) => `
+    <tr>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.termValue`, t.termValue, "number")}</td>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.termUnit`, t.termUnit)}</td>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.description`, t.description)}</td>
+      <td><select data-index-path="contractTerms.${groupName}.${i}.isDefault"><option value="0" ${Number(t.isDefault || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(t.isDefault || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.sortOrder`, t.sortOrder ?? i, "number")}</td>
+      <td><div class="action-row" style="margin:0"><button class="btn blue" data-group="${groupName}" data-set-default-term="${i}">Default</button><button class="btn red" data-group="${groupName}" data-del-term="${i}">Delete</button></div></td>
+    </tr>`).join("")}</tbody></table></div>`;
+}
+function renderPackages() {
+  const packages = data.packages || [];
+  if (activePackageIndex >= packages.length) activePackageIndex = Math.max(0, packages.length - 1);
+  const active = packages[activePackageIndex] || {};
+  const summary = packages.length ? `<div class="package-summary">
+    <div class="summary-tile"><div class="summary-label">Active</div><div class="summary-value">${esc(active.name || active.internalName || "Package")}</div></div>
+    <div class="summary-tile"><div class="summary-label">Amount</div><div class="summary-value">${esc(money(active.amount))}</div></div>
+    <div class="summary-tile"><div class="summary-label">Volume Bands</div><div class="summary-value">${(active.monthlyVolumes || []).length}</div></div>
+    <div class="summary-tile"><div class="summary-label">Option Groups</div><div class="summary-value">${(active.optionItems || []).length}</div></div>
+  </div>` : "";
+  editor.innerHTML = `
+    ${sectionTitle("Packages", `${packages.length} packages`, "packages")}
+    ${stickyActions(`<button class="btn green" id="addPackage">+ Add Package</button><button class="btn blue" id="dupPackage">Duplicate Active</button><button class="btn" id="movePkgUp">Move Up</button><button class="btn" id="movePkgDown">Move Down</button><button class="btn" id="copyInternalName">Copy Internal Name to Display</button><button class="btn red" id="delPackage">Delete Active</button>`)}
+    ${summary}
+    <div class="card"><div class="tabs sticky-tabs">${packages.map((p, i) => `<div class="tab ${i === activePackageIndex ? "active" : ""}" data-pkg-tab="${i}">${i + 1}. ${esc(p.name || p.internalName || "Package")}</div>`).join("")}</div>
+      <div class="card-body">${packages.length ? renderPackageEditor(packages[activePackageIndex], activePackageIndex) : `<div class="empty">No packages found.</div>`}</div></div>`;
+  bindIndexedInputs();
+  document.getElementById("addPackage").onclick = () => { packages.push(defaultPackage()); activePackageIndex = packages.length - 1; normalizeSort(packages); markDirty(); render(); };
+  document.getElementById("dupPackage").onclick = () => {
+    if (!packages.length) return;
+    const copy = clone(packages[activePackageIndex]);
+    copy.name = (copy.name || "Package") + " Copy";
+    copy.internalName = (copy.internalName || "Package") + " Copy";
+    packages.splice(activePackageIndex + 1, 0, copy);
+    activePackageIndex++;
+    normalizeSort(packages);
+    markDirty();
+    render();
+  };
+  document.getElementById("delPackage").onclick = () => {
+    if (!packages.length) return;
+    const pkg = packages[activePackageIndex];
+    const volumeCount = (pkg.monthlyVolumes || []).length;
+    const groupCount = (pkg.optionItems || []).length;
+    const lineCount = (pkg.optionItems || []).reduce((sum, group) => sum + ((group.optionLineItems || []).length), 0);
+    const name = pkg.name || pkg.internalName || `Package ${activePackageIndex + 1}`;
+    const msg = `Delete active package: ${name}?\n\nThis package contains ${volumeCount} volume band(s), ${groupCount} option group(s), and ${lineCount} option line item(s).\n\nThis cannot be undone unless you discard changes or reload the original file.`;
+    if (!confirm(msg)) return;
+    packages.splice(activePackageIndex, 1);
+    activePackageIndex = Math.max(0, Math.min(activePackageIndex, packages.length - 1));
+    normalizeSort(packages);
+    markDirty();
+    render();
+  };
+  document.getElementById("movePkgUp").onclick = () => { if (activePackageIndex <= 0) return; [packages[activePackageIndex - 1], packages[activePackageIndex]] = [packages[activePackageIndex], packages[activePackageIndex - 1]]; activePackageIndex--; normalizeSort(packages); markDirty(); render(); };
+  document.getElementById("movePkgDown").onclick = () => { if (activePackageIndex >= packages.length - 1) return; [packages[activePackageIndex + 1], packages[activePackageIndex]] = [packages[activePackageIndex], packages[activePackageIndex + 1]]; activePackageIndex++; normalizeSort(packages); markDirty(); render(); };
+  const copyInternalNameBtn = document.getElementById("copyInternalName");
+  if (copyInternalNameBtn) {
+    copyInternalNameBtn.onclick = () => {
+      if (!packages.length) return;
+      packages[activePackageIndex].name = packages[activePackageIndex].internalName || packages[activePackageIndex].name || "";
+      markDirty();
+      render();
+    };
+  }
+  editor.querySelectorAll("[data-pkg-tab]").forEach(t => t.onclick = () => { activePackageIndex = Number(t.dataset.pkgTab); render(); });
+  editor.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { activePackageMode = b.dataset.mode; render(); });
+  editor.querySelectorAll("[data-add-tier]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; pkg.monthlyVolumes.push(defaultMonthlyVolume(pkg.monthlyVolumes.length)); normalizeSort(pkg.monthlyVolumes); markDirty(); render(); });
+  editor.querySelectorAll("[data-dup-tier]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const idx = Number(btn.dataset.dupTier); const copy = clone(pkg.monthlyVolumes[idx] || defaultMonthlyVolume(idx)); copy.internalName = (copy.internalName || "Monthly Volume") + " Copy"; pkg.monthlyVolumes.splice(idx + 1, 0, copy); normalizeSort(pkg.monthlyVolumes); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-tier]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const idx = Number(btn.dataset.delTier); const mv = pkg.monthlyVolumes[idx] || {}; const name = mv.internalName || `Band ${idx + 1}`; const termCount = (mv.termAmounts || []).length; if (!confirm(`Delete volume band: ${name}?\n\nThis band has ${termCount} term amount record(s).`)) return; pkg.monthlyVolumes.splice(idx, 1); normalizeSort(pkg.monthlyVolumes); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-tier-up]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const idx = Number(btn.dataset.moveTierUp); if (idx <= 0) return; [pkg.monthlyVolumes[idx - 1], pkg.monthlyVolumes[idx]] = [pkg.monthlyVolumes[idx], pkg.monthlyVolumes[idx - 1]]; normalizeSort(pkg.monthlyVolumes); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-tier-down]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const idx = Number(btn.dataset.moveTierDown); if (idx >= pkg.monthlyVolumes.length - 1) return; [pkg.monthlyVolumes[idx + 1], pkg.monthlyVolumes[idx]] = [pkg.monthlyVolumes[idx], pkg.monthlyVolumes[idx + 1]]; normalizeSort(pkg.monthlyVolumes); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-term-amount]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const idx = Number(btn.dataset.addTermAmount); const mv = pkg.monthlyVolumes[idx]; mv.termAmounts = mv.termAmounts || []; mv.termAmounts.push(defaultTermAmount()); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-term-amount]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const mv = pkg.monthlyVolumes[Number(btn.dataset.bandIdx)]; mv.termAmounts.splice(Number(btn.dataset.delTermAmount), 1); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-pkg-group]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; pkg.optionItems.push(defaultOptionGroup()); normalizeSort(pkg.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-pkg-group]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const gi = Number(btn.dataset.delPkgGroup); const group = pkg.optionItems[gi] || {}; const lines = (group.optionLineItems || []).length; if (!confirm(`Delete package option group: ${group.optionItemType || 'Group'}?\n\nThis group has ${lines} line item(s).`)) return; pkg.optionItems.splice(gi, 1); normalizeSort(pkg.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-dup-pkg-group]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const gi = Number(btn.dataset.dupPkgGroup); const copy = clone(pkg.optionItems[gi] || defaultOptionGroup()); copy.optionItemType = (copy.optionItemType || 'Group') + ' Copy'; pkg.optionItems.splice(gi + 1, 0, copy); normalizeSort(pkg.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-pkg-group-up]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const gi = Number(btn.dataset.movePkgGroupUp); if (gi <= 0) return; [pkg.optionItems[gi - 1], pkg.optionItems[gi]] = [pkg.optionItems[gi], pkg.optionItems[gi - 1]]; normalizeSort(pkg.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-pkg-group-down]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const gi = Number(btn.dataset.movePkgGroupDown); if (gi >= pkg.optionItems.length - 1) return; [pkg.optionItems[gi + 1], pkg.optionItems[gi]] = [pkg.optionItems[gi], pkg.optionItems[gi + 1]]; normalizeSort(pkg.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-pkg-line]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.addPkgLine)]; g.optionLineItems = g.optionLineItems || []; g.optionLineItems.push(defaultLineItem()); normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-pkg-line]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.delPkgLine); const li = (g.optionLineItems || [])[idx] || {}; if (!confirm(`Delete line item: ${li.internalName || li.marketingTitle || 'Line Item'}?`)) return; g.optionLineItems.splice(idx, 1); normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-dup-pkg-line]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.dupPkgLine); const copy = clone((g.optionLineItems || [])[idx] || defaultLineItem()); copy.internalName = (copy.internalName || 'New Option') + ' Copy'; g.optionLineItems.splice(idx + 1, 0, copy); normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-pkg-line-up]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.movePkgLineUp); if (idx <= 0) return; [g.optionLineItems[idx - 1], g.optionLineItems[idx]] = [g.optionLineItems[idx], g.optionLineItems[idx - 1]]; normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-pkg-line-down]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.movePkgLineDown); if (idx >= g.optionLineItems.length - 1) return; [g.optionLineItems[idx + 1], g.optionLineItems[idx]] = [g.optionLineItems[idx], g.optionLineItems[idx + 1]]; normalizeSort(g.optionLineItems); markDirty(); render(); });
+}
+function renderPackageEditor(pkg, i) {
+  pkg.monthlyVolumes = pkg.monthlyVolumes || [];
+  pkg.optionItems = pkg.optionItems || [];
+  return `
+    <div class="action-row package-mode-row"><button class="btn ${activePackageMode === "details" ? "primary" : ""}" data-mode="details">Details</button><button class="btn ${activePackageMode === "volumes" ? "primary" : ""}" data-mode="volumes">Volume Bands</button><button class="btn ${activePackageMode === "pkgOptions" ? "primary" : ""}" data-mode="pkgOptions">Package Options</button></div>
+    ${activePackageMode === "details" ? renderPackageDetails(pkg, i) : ""}
+    ${activePackageMode === "volumes" ? renderPackageVolumes(pkg, i) : ""}
+    ${activePackageMode === "pkgOptions" ? renderPackageOptions(pkg, i) : ""}`;
+}
+function renderPackageDetails(pkg, i) {
+  return collapsibleCard("Package Details", `<div class="grid cols3">
+    ${fieldIndex(`packages.${i}.internalName`, "Internal Name", pkg.internalName)}
+    ${fieldIndex(`packages.${i}.name`, "Display Name", pkg.name)}
+    ${fieldIndex(`packages.${i}.marketingTitle`, "Marketing Title", pkg.marketingTitle)}
+    ${fieldIndex(`packages.${i}.amount`, "Amount", pkg.amount, "number")}
+    ${fieldIndex(`packages.${i}.amountDescription`, "Amount Description", pkg.amountDescription)}
+    ${fieldIndex(`packages.${i}.unit`, "Unit", pkg.unit)}
+    ${fieldIndex(`packages.${i}.isDefault`, "Is Default", pkg.isDefault, "select")}
+    ${fieldIndex(`packages.${i}.isCountable`, "Is Countable", pkg.isCountable, "select")}
+    ${fieldIndex(`packages.${i}.sortOrder`, "Sort Order", pkg.sortOrder, "number")}
+    <div class="field" style="grid-column:1/-1"><label>Tagline</label>${inputForIndex(`packages.${i}.tagline`, pkg.tagline)}</div>
+    <div class="field" style="grid-column:1/-1"><label>Short Description</label>${inputForIndex(`packages.${i}.shortDescription`, pkg.shortDescription)}</div>
+    <div class="field" style="grid-column:1/-1"><label>Long Description</label>${textareaForIndex(`packages.${i}.longDescription`, pkg.longDescription)}</div>
+    <div class="field" style="grid-column:1/-1"><label>Included Module Text</label>${textareaForIndex(`packages.${i}.includedModuleText`, pkg.includedModuleText)}</div>
+  </div>
+  <hr><div class="help">productItems and discountItems are preserved but not edited.</div>`, {open: true});
+}
+function fieldIndex(path, label, value, type = "text") {
+  if (type === "select") {
+    return `<div class="field"><label>${esc(label)}</label><select data-index-path="${esc(path)}"><option value="0" ${Number(value || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(value || 0) === 1 ? "selected" : ""}>Yes</option></select></div>`;
+  }
+  return `<div class="field"><label>${esc(label)}</label>${inputForIndex(path, value, type)}</div>`;
+}
+function renderPackageVolumes(pkg, pIdx) {
+  pkg.monthlyVolumes = pkg.monthlyVolumes || [];
+  const analysis = analyzeVolumeBands(pkg.monthlyVolumes);
+  const issueStrip = renderVolumeIssueStrip(analysis, pkg.monthlyVolumes.length);
+  const table = pkg.monthlyVolumes.length ? `<div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Min</th><th>Max</th><th>Amount</th><th>Unit Amount</th><th>Default</th><th>Sort</th><th>Status</th><th>Actions</th></tr></thead><tbody>${pkg.monthlyVolumes.map((mv, i) => {
+    const issues = analysis.byIndex[i] || [];
+    const hardIssue = issues.some(x => x.type === "error");
+    const rowClass = hardIssue ? "row-issue" : issues.length ? "row-warn" : "";
+    const status = issues.length ? issues.map(x => `<span class="issue-pill ${x.type === "error" ? "error" : ""}">${esc(x.text)}</span>`).join(" ") : `<span class="issue-pill ok">OK</span>`;
+    return `<tr class="${rowClass}">
+    <td><span class="tier-badge">${i + 1}</span></td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.internalName`, mv.internalName)}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.minimumValue`, mv.minimumValue, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.maximumValue`, mv.maximumValue, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.amount`, mv.amount, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.transactionUnitAmount`, mv.transactionUnitAmount, "number")}</td>
+    <td><select data-index-path="packages.${pIdx}.monthlyVolumes.${i}.isDefault"><option value="0" ${Number(mv.isDefault || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(mv.isDefault || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.sortOrder`, mv.sortOrder ?? i, "number")}</td>
+    <td>${status}</td>
+    <td><div class="tiny-actions"><button class="btn" data-move-tier-up="${i}">↑</button><button class="btn" data-move-tier-down="${i}">↓</button><button class="btn blue" data-dup-tier="${i}">Duplicate</button><button class="btn red" data-del-tier="${i}">Delete</button></div></td>
+  </tr><tr><td colspan="10"><div class="grid cols2"><div class="field"><label>Amount Description</label>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.amountDescription`, mv.amountDescription)}</div><div class="field"><label>Unit Label</label>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.unit`, mv.unit)}</div></div>${renderTermAmountsForBand(mv, pIdx, i)}</td></tr>`;
+  }).join("")}</tbody></table></div>` : `<div class="empty">No monthly volume bands.</div>`;
+  return `${stickyActions(`<button class="btn green" data-add-tier="1">+ Add Volume Band</button>`)}${collapsibleCard("Monthly Volume Bands", `${issueStrip}${table}`, {sub: `${pkg.monthlyVolumes.length} bands`, open: true})}`;
+}
+function renderTermAmountsForBand(mv, pIdx, bandIdx) {
+  mv.termAmounts = mv.termAmounts || [];
+  const body = mv.termAmounts.length ? `<div class="table-scroll term-grid"><table><thead><tr><th>Initial Term Id</th><th>Amount</th><th>Unit Amount</th><th>Overage Amount</th><th></th></tr></thead><tbody>${mv.termAmounts.map((ta, ti) => `<tr>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${bandIdx}.termAmounts.${ti}.initialTermId`, ta.initialTermId)}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${bandIdx}.termAmounts.${ti}.amount`, ta.amount, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${bandIdx}.termAmounts.${ti}.transactionUnitAmount`, ta.transactionUnitAmount, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${bandIdx}.termAmounts.${ti}.transactionUnitOverageAmount`, ta.transactionUnitOverageAmount, "number")}</td>
+    <td><button class="btn red" data-band-idx="${bandIdx}" data-del-term-amount="${ti}">Delete</button></td>
+  </tr>`).join("")}</tbody></table></div>` : `<div class="empty">No term amounts for this band.</div>`;
+  return `<details class="term-detail"><summary>Term Amounts (${mv.termAmounts.length})</summary><div class="action-row"><button class="btn green" data-add-term-amount="${bandIdx}">+ Add Term Amount</button></div>${body}</details>`;
+}
+function renderVolumeIssueStrip(analysis, count) {
+  if (!count) return "";
+  if (!analysis.summary.length) return `<div class="volume-issue-strip"><span class="issue-pill ok">Volume ranges look clean</span></div>`;
+  return `<div class="volume-issue-strip">${analysis.summary.map(x => `<span class="issue-pill ${x.type === "error" ? "error" : ""}">${esc(x.text)}</span>`).join("")}</div>`;
+}
+function analyzeVolumeBands(volumes) {
+  const byIndex = {};
+  const summary = [];
+  const addIssue = (idx, text, type = "warn") => {
+    byIndex[idx] = byIndex[idx] || [];
+    byIndex[idx].push({text, type});
+  };
+  const rows = (volumes || []).map((mv, idx) => {
+    const minRaw = mv.minimumValue;
+    const maxRaw = mv.maximumValue;
+    const min = minRaw === "" || minRaw === null || minRaw === undefined ? null : Number(minRaw);
+    const max = maxRaw === "" || maxRaw === null || maxRaw === undefined ? null : Number(maxRaw);
+    if (min === null || Number.isNaN(min)) addIssue(idx, "Missing min", "error");
+    if (max === null || Number.isNaN(max)) addIssue(idx, "Missing max", "error");
+    if (min !== null && max !== null && !Number.isNaN(min) && !Number.isNaN(max) && min > max) addIssue(idx, "Min > max", "error");
+    return {idx, min, max};
+  }).filter(r => r.min !== null && r.max !== null && !Number.isNaN(r.min) && !Number.isNaN(r.max));
+  rows.sort((a, b) => a.min - b.min || a.max - b.max);
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1];
+    const cur = rows[i];
+    if (cur.min <= prev.max) {
+      addIssue(cur.idx, `Overlap with band ${prev.idx + 1}`, "error");
+      addIssue(prev.idx, `Overlap with band ${cur.idx + 1}`, "error");
+    } else if (cur.min > prev.max + 1) {
+      addIssue(cur.idx, `Gap after band ${prev.idx + 1}`, "warn");
+      addIssue(prev.idx, `Gap before band ${cur.idx + 1}`, "warn");
+    }
+  }
+  const errorCount = Object.values(byIndex).flat().filter(x => x.type === "error").length;
+  const warnCount = Object.values(byIndex).flat().filter(x => x.type !== "error").length;
+  if (errorCount) summary.push({text: `${errorCount} range error(s)`, type: "error"});
+  if (warnCount) summary.push({text: `${warnCount} range warning(s)`, type: "warn"});
+  return {byIndex, summary};
+}
+function defaultTermAmount() { return {initialTermId: "", amount: 0, transactionUnitAmount: 0, transactionUnitOverageAmount: 0}; }
+function renderPackageOptions(pkg, pIdx) {
+  pkg.optionItems = pkg.optionItems || [];
+  const groups = pkg.optionItems.length ? pkg.optionItems.map((g, gi) => renderOptionGroupCard(g, `packages.${pIdx}.optionItems.${gi}`, gi, true)).join("") : `<div class="empty">No package option groups.</div>`;
+  return `${stickyActions(`<button class="btn green" data-add-pkg-group="1">+ Add Package Option Group</button>`)}${groups}`;
+}
+function renderOptions() {
+  data.optionItems = data.optionItems || [];
+  editor.innerHTML = `${sectionTitle("Top-Level Option Items", "implementations, enrollments, addons", "options")}${stickyActions(`<button class="btn green" id="addTopGroup">+ Add Group</button>`)}${data.optionItems.length ? data.optionItems.map((g, gi) => renderOptionGroupCard(g, `optionItems.${gi}`, gi, false)).join("") : `<div class="card"><div class="card-body empty">No top-level option items.</div></div>`}`;
+  bindIndexedInputs();
+  document.getElementById("addTopGroup").onclick = () => { data.optionItems.push(defaultOptionGroup()); normalizeSort(data.optionItems); markDirty(); render(); };
+  editor.querySelectorAll("[data-del-top-group]").forEach(btn => btn.onclick = () => { const gi = Number(btn.dataset.delTopGroup); const group = data.optionItems[gi] || {}; const lines = (group.optionLineItems || []).length; if (!confirm(`Delete option group: ${group.optionItemType || 'Group'}?\n\nThis group has ${lines} line item(s).`)) return; data.optionItems.splice(gi, 1); normalizeSort(data.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-dup-top-group]").forEach(btn => btn.onclick = () => { const gi = Number(btn.dataset.dupTopGroup); const copy = clone(data.optionItems[gi] || defaultOptionGroup()); copy.optionItemType = (copy.optionItemType || 'Group') + ' Copy'; data.optionItems.splice(gi + 1, 0, copy); normalizeSort(data.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-top-group-up]").forEach(btn => btn.onclick = () => { const gi = Number(btn.dataset.moveTopGroupUp); if (gi <= 0) return; [data.optionItems[gi - 1], data.optionItems[gi]] = [data.optionItems[gi], data.optionItems[gi - 1]]; normalizeSort(data.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-top-group-down]").forEach(btn => btn.onclick = () => { const gi = Number(btn.dataset.moveTopGroupDown); if (gi >= data.optionItems.length - 1) return; [data.optionItems[gi + 1], data.optionItems[gi]] = [data.optionItems[gi], data.optionItems[gi + 1]]; normalizeSort(data.optionItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-top-line]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.addTopLine)]; g.optionLineItems = g.optionLineItems || []; g.optionLineItems.push(defaultLineItem()); normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-top-line]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.delTopLine); const li = (g.optionLineItems || [])[idx] || {}; if (!confirm(`Delete line item: ${li.internalName || li.marketingTitle || 'Line Item'}?`)) return; g.optionLineItems.splice(idx, 1); normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-dup-top-line]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.dupTopLine); const copy = clone((g.optionLineItems || [])[idx] || defaultLineItem()); copy.internalName = (copy.internalName || 'New Option') + ' Copy'; g.optionLineItems.splice(idx + 1, 0, copy); normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-top-line-up]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.moveTopLineUp); if (idx <= 0) return; [g.optionLineItems[idx - 1], g.optionLineItems[idx]] = [g.optionLineItems[idx], g.optionLineItems[idx - 1]]; normalizeSort(g.optionLineItems); markDirty(); render(); });
+  editor.querySelectorAll("[data-move-top-line-down]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.groupIdx)]; const idx = Number(btn.dataset.moveTopLineDown); if (idx >= g.optionLineItems.length - 1) return; [g.optionLineItems[idx + 1], g.optionLineItems[idx]] = [g.optionLineItems[idx], g.optionLineItems[idx + 1]]; normalizeSort(g.optionLineItems); markDirty(); render(); });
+}
+function renderOptionGroupCard(g, basePath, gi, isPkg) {
+  g.optionLineItems = g.optionLineItems || [];
+  const groupDelete = isPkg ? `data-del-pkg-group="${gi}"` : `data-del-top-group="${gi}"`;
+  const groupDup = isPkg ? `data-dup-pkg-group="${gi}"` : `data-dup-top-group="${gi}"`;
+  const groupUp = isPkg ? `data-move-pkg-group-up="${gi}"` : `data-move-top-group-up="${gi}"`;
+  const groupDown = isPkg ? `data-move-pkg-group-down="${gi}"` : `data-move-top-group-down="${gi}"`;
+  const addLineAttr = isPkg ? `data-add-pkg-line="${gi}"` : `data-add-top-line="${gi}"`;
+  const headExtra = `<span class="option-group-actions"><button class="btn" ${groupUp}>Up</button><button class="btn" ${groupDown}>Down</button><button class="btn blue" ${groupDup}>Duplicate Group</button><button class="btn red" ${groupDelete}>Delete Group</button></span>`;
+  const body = `<div class="grid cols2">
+    ${fieldIndex(`${basePath}.optionItemType`, "Group Type", g.optionItemType)}
+    ${fieldIndex(`${basePath}.sortOrder`, "Sort Order", g.sortOrder ?? gi, "number")}
+    <div style="grid-column:1/-1"><label>Header Description</label>${textareaForIndex(`${basePath}.headerDescription`, g.headerDescription)}</div>
+    ${fieldIndex(`${basePath}.toolTipText`, "Tooltip Text", g.toolTipText)}
+    ${fieldIndex(`${basePath}.toolTipDescription`, "Tooltip Description", g.toolTipDescription)}
+    <div style="grid-column:1/-1" class="action-row"><button class="btn green" ${addLineAttr}>+ Add Line Item</button><span class="small-muted">discountItems are hidden and preserved.</span></div>
+    <div style="grid-column:1/-1">${renderLineItemsTable(g.optionLineItems, basePath, gi, isPkg)}</div>
+  </div>`;
+  return collapsibleCard(g.optionItemType || `Group ${gi + 1}`, body, {sub: `${g.optionLineItems.length} line item(s)`, open: gi === 0, headExtra});
+}
+function renderLineItemsTable(items, basePath, groupIdx, isPkg) {
+  if (!items.length) return `<div class="empty">No line items.</div>`;
+  const delAttr = isPkg ? "data-del-pkg-line" : "data-del-top-line";
+  const dupAttr = isPkg ? "data-dup-pkg-line" : "data-dup-top-line";
+  const upAttr = isPkg ? "data-move-pkg-line-up" : "data-move-top-line-up";
+  const downAttr = isPkg ? "data-move-pkg-line-down" : "data-move-top-line-down";
+  return `<div class="table-scroll option-line-table"><table><thead><tr><th>#</th><th>Internal Name</th><th>Marketing Title</th><th>Amount</th><th>Unit</th><th>Included</th><th>Default</th><th>Countable</th><th>Sort</th><th>Eligible Packages</th><th>Actions</th></tr></thead><tbody>${items.map((li, i) => {
+    const nameIssue = !(li.internalName || li.marketingTitle || li.shortDescription) ? `<span class="issue-pill error">Missing name</span>` : `<span class="issue-pill ok">OK</span>`;
+    return `<tr>
+      <td><span class="tier-badge">${i + 1}</span></td>
+      <td>${inputForIndex(`${basePath}.optionLineItems.${i}.internalName`, li.internalName)}</td>
+      <td>${inputForIndex(`${basePath}.optionLineItems.${i}.marketingTitle`, li.marketingTitle)}</td>
+      <td>${inputForIndex(`${basePath}.optionLineItems.${i}.amount`, li.amount, "number")}</td>
+      <td>${inputForIndex(`${basePath}.optionLineItems.${i}.unit`, li.unit)}</td>
+      <td><select data-index-path="${basePath}.optionLineItems.${i}.isIncluded"><option value="0" ${Number(li.isIncluded || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(li.isIncluded || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+      <td><select data-index-path="${basePath}.optionLineItems.${i}.isDefault"><option value="0" ${Number(li.isDefault || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(li.isDefault || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+      <td><select data-index-path="${basePath}.optionLineItems.${i}.isCountable"><option value="0" ${Number(li.isCountable || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(li.isCountable || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+      <td>${inputForIndex(`${basePath}.optionLineItems.${i}.sortOrder`, li.sortOrder ?? i, "number")}</td>
+      <td>${renderEligiblePackageChips(li)}</td>
+      <td class="option-action-cell"><div class="action-row" style="margin:0"><button class="btn" data-group-idx="${groupIdx}" ${upAttr}="${i}">Up</button><button class="btn" data-group-idx="${groupIdx}" ${downAttr}="${i}">Down</button><button class="btn blue" data-group-idx="${groupIdx}" ${dupAttr}="${i}">Duplicate</button><button class="btn red" data-group-idx="${groupIdx}" ${delAttr}="${i}">Delete</button></div></td>
+    </tr>
+    <tr class="line-detail"><td colspan="11"><div class="line-detail-inner">
+      <div class="grid cols2">
+        ${fieldIndex(`${basePath}.optionLineItems.${i}.catalogCode`, "Catalog Code", li.catalogCode)}
+        ${fieldIndex(`${basePath}.optionLineItems.${i}.amountDescription`, "Amount Description", li.amountDescription)}
+        ${fieldIndex(`${basePath}.optionLineItems.${i}.shortDescription`, "Short Description", li.shortDescription)}
+        ${fieldIndex(`${basePath}.optionLineItems.${i}.tagline`, "Tagline", li.tagline)}
+        <div style="grid-column:1/-1"><label>Long Description</label>${textareaForIndex(`${basePath}.optionLineItems.${i}.longDescription`, li.longDescription)}</div>
+        <div style="grid-column:1/-1"><label>Tooltip Description</label>${textareaForIndex(`${basePath}.optionLineItems.${i}.toolTipDescription`, li.toolTipDescription)}</div>
+      </div>
+      <div>${nameIssue} <span class="small-muted">eligiblePackages and discountItems are read-only passthrough data.</span></div>
+    </div></td></tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+function renderEligiblePackageChips(li) {
+  const eligible = li.eligiblePackages || [];
+  if (!Array.isArray(eligible) || !eligible.length) return `<span class="small-muted">None</span>`;
+  return `<div class="readonly-chip-row">${eligible.map(item => `<span class="readonly-chip">${esc(typeof item === "object" ? JSON.stringify(item) : item)}</span>`).join("")}</div>`;
+}
+function defaultCustomAttribute(sortOrder) {
+  return {name: "", description: "", value: "", isRequired: 0, displayFor: 0, sortOrder};
+}
+function renderCustomAttrs() {
+  data.customAttributes = data.customAttributes || [];
+  const attrs = data.customAttributes;
+  const dupes = duplicateValues(attrs.map(a => a.name));
+  const rows = attrs.length ? attrs.map((a, i) => {
+    const key = String(a.name || "").trim().toLowerCase();
+    const nameWarn = !key ? `<div class="issue-pill error">Missing name</div>` : dupes.has(key) ? `<div class="issue-pill error">Duplicate name</div>` : "";
+    return `<tr>
+      <td>${inputForIndex(`customAttributes.${i}.name`, a.name)}</td>
+      <td>${inputForIndex(`customAttributes.${i}.description`, a.description)}</td>
+      <td>${textareaForIndex(`customAttributes.${i}.value`, a.value)}</td>
+      <td>${inputForIndex(`customAttributes.${i}.displayFor`, a.displayFor, "number")}</td>
+      <td>${inputForIndex(`customAttributes.${i}.sortOrder`, a.sortOrder ?? i, "number")}</td>
+      <td><div class="attr-preview">${safeHtmlPreview(a.value)}</div>${nameWarn}</td>
+      <td><div class="tiny-actions"><button class="btn" data-attr-up="${i}">Up</button><button class="btn" data-attr-down="${i}">Down</button><button class="btn blue" data-attr-dup="${i}">Duplicate</button><button class="btn red" data-attr-del="${i}">Delete</button></div></td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="7" class="empty">No custom attributes.</td></tr>`;
+  editor.innerHTML = `${sectionTitle("Custom Attributes", "editable grid with duplicate-name checks", "custom")}${stickyActions(`<button class="btn green" id="addAttr">+ Add Attribute</button><button class="btn" id="normalizeAttrs">Normalize Sort Order</button>`)}<div class="card"><div class="card-head"><div class="card-title">Attributes</div><span class="badge">${attrs.length} item(s)</span></div><div class="card-body table-scroll attr-table"><table><thead><tr><th>Name</th><th>Description</th><th>Value</th><th>Display For</th><th>Sort</th><th>Preview / Issues</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  bindIndexedInputs();
+  document.getElementById("addAttr").onclick = () => { attrs.push(defaultCustomAttribute(attrs.length)); markDirty(); render(); };
+  document.getElementById("normalizeAttrs").onclick = () => { normalizeSort(attrs); markDirty(); render(); };
+  editor.querySelectorAll("[data-attr-up]").forEach(btn => btn.onclick = () => { const i = Number(btn.dataset.attrUp); if (i > 0) { [attrs[i-1], attrs[i]] = [attrs[i], attrs[i-1]]; normalizeSort(attrs); markDirty(); render(); }});
+  editor.querySelectorAll("[data-attr-down]").forEach(btn => btn.onclick = () => { const i = Number(btn.dataset.attrDown); if (i < attrs.length - 1) { [attrs[i+1], attrs[i]] = [attrs[i], attrs[i+1]]; normalizeSort(attrs); markDirty(); render(); }});
+  editor.querySelectorAll("[data-attr-dup]").forEach(btn => btn.onclick = () => { const i = Number(btn.dataset.attrDup); const copy = clone(attrs[i]); copy.name = `${copy.name || "Attribute"} Copy`; attrs.splice(i + 1, 0, copy); normalizeSort(attrs); markDirty(); render(); });
+  editor.querySelectorAll("[data-attr-del]").forEach(btn => btn.onclick = () => { const i = Number(btn.dataset.attrDel); if (confirm(`Delete custom attribute ${attrs[i]?.name || i + 1}?`)) { attrs.splice(i, 1); normalizeSort(attrs); markDirty(); render(); }});
+}
+
+function renderSaveExport() {
+  const pathLooksComplete = Boolean(currentFilePath && currentFilePath.toLowerCase().endsWith(".json") && currentFilePath.includes("\\"));
+  const validationText = !validationRan ? "Not run" : validationErrors.length ? `${validationErrors.length} issue(s)` : "Passed";
+  editor.innerHTML = `
+    ${sectionTitle("Save / Export", "backend save copy or browser download", "save")}
+    <div class="card"><div class="card-head"><div class="card-title">Current Status</div></div><div class="card-body grid cols2">
+      <div><label>Loaded File</label><div class="preview-card">${esc(currentFileName)}</div></div>
+      <div><label>Unsaved Changes</label><div class="preview-card">${dirty ? "Yes" : "No"}</div></div>
+      <div><label>Validation</label><div class="preview-card">${esc(validationText)}</div></div>
+      <div><label>Last Save / Download</label><div class="preview-card">${esc(lastSaveMessage)}</div></div>
+    </div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Save Copy Through Backend</div><span class="badge">recommended for project folder</span></div><div class="card-body">
+      <div class="field"><label>Source JSON full path</label><input id="savePathInput" value="${esc(currentFilePath)}" placeholder="Example: C:\\Dell Inspirion\\JSON Editor\\Sample JSONs\\item_mn__08092024.json" /></div>
+      <div class="help">The backend saves a new timestamped copy in this same folder. Chrome only gives the file name, so paste the full source path once.</div>
+      ${pathLooksComplete ? `<div class="okbox">Path looks ready for backend save.</div>` : `<div class="warnbox">Path is incomplete. Paste the full Windows path before using Save Copy.</div>`}
+      <div class="action-row"><button class="btn primary" id="saveCopyPageBtn">Save Copy</button><button class="btn green" id="validateBeforeSaveBtn">Validate First</button></div>
+    </div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Browser Download</div><span class="badge">fallback</span></div><div class="card-body">
+      <p class="help">This downloads a versioned JSON file to your browser Downloads folder. Use it when you do not want to enter a full path.</p>
+      <button class="btn" id="downloadPageBtn">Download JSON</button>
+    </div></div>
+    ${collapsibleCard("Save History", saveHistoryHtml(), {sub: `${saveHistory.length} recent action(s)`, open: true})}`;
+  const pathInput = document.getElementById("savePathInput");
+  pathInput.addEventListener("input", e => { currentFilePath = e.target.value; rememberCurrentPath(); updateShell(); });
+  document.getElementById("saveCopyPageBtn").onclick = saveVersion;
+  document.getElementById("validateBeforeSaveBtn").onclick = validateData;
+  document.getElementById("downloadPageBtn").onclick = downloadJson;
+}
+
+function renderValidation() {
+  runFrontendValidation(false);
+  const issues = validationIssues || [];
+  const filtered = filterValidationIssues(issues, validationFilter);
+  const grouped = groupValidationIssues(filtered);
+  const totalErrors = issues.filter(i => i.severity === "error").length;
+  const totalWarnings = issues.filter(i => i.severity !== "error").length;
+  const statusText = validationRan ? "backend validation included" : "frontend checks only, run validation before save";
+  const summary = `<div class="validation-summary-grid">
+    <div class="validation-summary-card"><div class="summary-label">Errors</div><div class="summary-count" style="color:var(--red)">${totalErrors}</div></div>
+    <div class="validation-summary-card"><div class="summary-label">Warnings</div><div class="summary-count" style="color:var(--amber)">${totalWarnings}</div></div>
+    <div class="validation-summary-card"><div class="summary-label">Status</div><div class="summary-count" style="font-size:13px">${esc(statusText)}</div></div>
+  </div>`;
+  const filter = `<div class="validation-filter-row"><input id="validationFilter" value="${esc(validationFilter)}" placeholder="Filter by section, path, or issue text"><button class="btn" id="clearValidationFilter">Clear</button></div>`;
+  let body = "";
+  if (!issues.length) {
+    body = `<div class="okbox">Validation passed. No frontend issues found${validationRan ? " and backend validation has run" : ""}.</div>`;
+  } else if (!filtered.length) {
+    body = `<div class="card"><div class="card-body empty">No issues match the current filter.</div></div>`;
+  } else {
+    body = Object.keys(grouped).map(group => {
+      const rows = grouped[group].map(issue => `<div class="issue-row ${esc(issue.severity)}" data-jump-section="${esc(issue.section || "validation")}" data-jump-package="${issue.packageIndex ?? ""}" data-jump-mode="${esc(issue.packageMode || "")}">
+        <div class="issue-severity ${esc(issue.severity)}">${esc(issue.severity)}</div>
+        <div><div>${esc(issue.message)}</div><div class="issue-path">${esc(issue.path || "")}</div></div>
+      </div>`).join("");
+      return `<div class="issue-group"><div class="section-rule">${esc(group)} (${grouped[group].length})</div>${rows}</div>`;
+    }).join("");
+  }
+  editor.innerHTML = `${sectionTitle("Validation", "frontend guardrails + backend /validate", "validation")}<div class="action-row"><button class="btn green" id="runValidation">Run Backend Validation</button></div>${summary}${filter}${body}`;
+  document.getElementById("runValidation").onclick = validateData;
+  document.getElementById("validationFilter").oninput = e => { validationFilter = e.target.value; renderValidation(); };
+  document.getElementById("clearValidationFilter").onclick = () => { validationFilter = ""; renderValidation(); };
+  editor.querySelectorAll("[data-jump-section]").forEach(row => row.onclick = () => jumpToIssue(row));
+}
+function shouldSkipDiffPath(path) {
+  return path.split(".").some(part => part === "discountItems");
+}
+function flattenForDiff(value, prefix = "", out = {}) {
+  if (shouldSkipDiffPath(prefix)) return out;
+  if (value === null || typeof value !== "object") {
+    out[prefix || "root"] = value;
+    return out;
+  }
+  if (Array.isArray(value)) {
+    if (!value.length) out[prefix || "root"] = [];
+    value.forEach((item, idx) => flattenForDiff(item, prefix ? `${prefix}.${idx}` : String(idx), out));
+    return out;
+  }
+  const keys = Object.keys(value);
+  if (!keys.length) out[prefix || "root"] = {};
+  keys.forEach(key => flattenForDiff(value[key], prefix ? `${prefix}.${key}` : key, out));
+  return out;
+}
+function compactValue(value) {
+  const raw = typeof value === "string" ? value : JSON.stringify(value);
+  const text = raw === undefined ? "" : String(raw);
+  return text.length > 500 ? text.slice(0, 500) + "…" : text;
+}
+function compareSectionForPath(path) {
+  if (path === "root") return {group: "Root", section: "metadata"};
+  if (path.startsWith("contractTerms")) return {group: "Contract Terms", section: "contracts"};
+  if (path.startsWith("packages")) return {group: "Packages", section: "packages"};
+  if (path.startsWith("optionItems")) return {group: "Option Items", section: "options"};
+  if (path.startsWith("customAttributes")) return {group: "Custom Attributes", section: "custom"};
+  return {group: "Metadata", section: "metadata"};
+}
+function packageIndexFromDiffPath(path) {
+  const match = path.match(/^packages\.(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+function packageModeFromDiffPath(path) {
+  if (path.includes(".monthlyVolumes")) return "volumes";
+  if (path.includes(".optionItems")) return "options";
+  return "details";
+}
+function isEmptyishDiffValue(value) {
+  return value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0) || (typeof value === "object" && value !== null && !Array.isArray(value) && !Object.keys(value).length);
+}
+function buildDiffRows(filterText = "") {
+  if (!originalData || !data) return [];
+  const before = flattenForDiff(originalData);
+  const after = flattenForDiff(data);
+  const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
+  const needle = filterText.trim().toLowerCase();
+  const ignoreSort = sessionStorage.getItem("compareIgnoreSortOrder") === "true";
+  const ignoreEmpty = sessionStorage.getItem("compareIgnoreEmpty") === "true";
+  return keys
+    .filter(key => JSON.stringify(before[key]) !== JSON.stringify(after[key]))
+    .filter(key => !(ignoreSort && key.split(".").pop() === "sortOrder"))
+    .filter(key => !(ignoreEmpty && (isEmptyishDiffValue(before[key]) || isEmptyishDiffValue(after[key]))))
+    .filter(key => !needle || key.toLowerCase().includes(needle) || compactValue(before[key]).toLowerCase().includes(needle) || compactValue(after[key]).toLowerCase().includes(needle))
+    .map(key => {
+      const meta = compareSectionForPath(key);
+      return { key, before: before[key], after: after[key], type: !(key in before) ? "added" : !(key in after) ? "removed" : "changed", group: meta.group, section: meta.section, packageIndex: packageIndexFromDiffPath(key), packageMode: packageModeFromDiffPath(key) };
+    });
+}
+function groupDiffRows(rows) {
+  return rows.reduce((acc, row) => {
+    if (!acc[row.group]) acc[row.group] = [];
+    acc[row.group].push(row);
+    return acc;
+  }, {});
+}
+function jumpToDiff(rowEl) {
+  currentSection = rowEl.dataset.section || "metadata";
+  if (rowEl.dataset.packageIndex !== "" && rowEl.dataset.packageIndex !== "null") activePackageIndex = Number(rowEl.dataset.packageIndex);
+  if (rowEl.dataset.packageMode) activePackageMode = rowEl.dataset.packageMode;
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.section === currentSection));
+  render();
+}
+function renderCompare() {
+  const query = sessionStorage.getItem("compareFilter") || "";
+  const ignoreSort = sessionStorage.getItem("compareIgnoreSortOrder") === "true";
+  const ignoreEmpty = sessionStorage.getItem("compareIgnoreEmpty") === "true";
+  const rows = buildDiffRows(query);
+  const grouped = groupDiffRows(rows);
+  const controls = `<div class="search-row"><input id="compareSearch" value="${esc(query)}" placeholder="Filter by path or value" /><button class="btn" id="clearCompareSearch">Clear</button></div>
+    <div class="action-row"><label class="checkline"><input type="checkbox" id="ignoreSortOrder" ${ignoreSort ? "checked" : ""}> Ignore sortOrder changes</label><label class="checkline"><input type="checkbox" id="ignoreEmptyValues" ${ignoreEmpty ? "checked" : ""}> Ignore empty value changes</label></div>`;
+  const body = rows.length ? `<div class="help" style="margin-bottom:10px">${rows.length} changed field(s). Click any changed path to jump to that editor section.</div><div class="diff-grid">${Object.keys(grouped).map(group => `<div class="issue-group"><div class="section-rule">${esc(group)} (${grouped[group].length})</div>${grouped[group].map(row => `<div class="diff-row" data-section="${esc(row.section)}" data-package-index="${row.packageIndex ?? ""}" data-package-mode="${esc(row.packageMode || "")}"><div class="diff-head"><span class="diff-${row.type}">${esc(row.type.toUpperCase())}</span><span class="diff-path">${esc(row.key)}</span></div><div class="diff-body"><div class="diff-cell"><div class="diff-label">Original</div><div class="diff-value">${esc(compactValue(row.before))}</div></div><div class="diff-cell"><div class="diff-label">Current</div><div class="diff-value">${esc(compactValue(row.after))}</div></div></div></div>`).join("")}</div>`).join("")}</div>` : `<div class="okbox">No differences found against the opened file with the current filters.</div>`;
+  editor.innerHTML = `${sectionTitle("Compare Versions", "grouped original vs current, discountItems hidden", "compare")} ${controls} ${body}`;
+  document.getElementById("compareSearch").addEventListener("input", e => { sessionStorage.setItem("compareFilter", e.target.value); renderCompare(); });
+  document.getElementById("clearCompareSearch").onclick = () => { sessionStorage.removeItem("compareFilter"); renderCompare(); };
+  document.getElementById("ignoreSortOrder").onchange = e => { sessionStorage.setItem("compareIgnoreSortOrder", e.target.checked ? "true" : "false"); renderCompare(); };
+  document.getElementById("ignoreEmptyValues").onchange = e => { sessionStorage.setItem("compareIgnoreEmpty", e.target.checked ? "true" : "false"); renderCompare(); };
+  editor.querySelectorAll(".diff-row[data-section]").forEach(row => row.onclick = () => jumpToDiff(row));
+}
+function renderRawJson(rawOverride = null, rawStatus = "") {
+  const rawText = rawOverride ?? JSON.stringify(data, null, 2);
+  const differs = rawDiffersFromEdited(rawText);
+  const status = rawStatus || (differs ? "Raw JSON has edits that are not applied yet." : "Raw JSON matches the structured editor.");
+  const rawEditor = `<textarea id="rawJson" class="raw-json" spellcheck="false">${esc(rawText)}</textarea>`;
+  editor.innerHTML = `<div class="section-title">Raw JSON <span class="sub">advanced editor with parse safety</span></div>${stickyActions(`<button class="btn green" id="applyRaw">Apply Raw JSON</button><button class="btn blue" id="formatRaw">Format JSON</button><button class="btn" id="resetRaw">Restore Edited Copy</button><button class="btn" id="copyRawJson">Copy JSON</button>`)}<div id="rawStatus" class="raw-status-box">${esc(status)}</div>${collapsibleCard("Raw JSON Editor", rawEditor, {sub: differs ? "edited, not applied" : "editable", open: true, bodyClass: "raw-json-wrap"})}`;
+  const textarea = document.getElementById("rawJson");
+  textarea.addEventListener("input", () => {
+    const statusEl = document.getElementById("rawStatus");
+    statusEl.className = rawDiffersFromEdited(textarea.value) ? "raw-error-box" : "raw-status-box";
+    statusEl.textContent = rawDiffersFromEdited(textarea.value) ? "Raw JSON differs from the structured editor. Apply or restore before leaving." : "Raw JSON matches the structured editor.";
+  });
+  document.getElementById("applyRaw").onclick = () => {
+    const text = textarea.value;
+    try {
+      const parsed = JSON.parse(text);
+      if (!confirm("Apply raw JSON changes to the structured editor?")) return;
+      data = parsed;
+      markDirty();
+      render();
+    } catch (err) {
+      const details = jsonParseDetails(text, err);
+      const location = details.line ? ` Line ${details.line}, column ${details.column}.` : "";
+      document.getElementById("rawStatus").outerHTML = `<div id="rawStatus" class="raw-error-box">Raw JSON is invalid.${esc(location)} ${esc(details.message)}</div>`;
+    }
+  };
+  document.getElementById("formatRaw").onclick = () => {
+    const text = textarea.value;
+    try {
+      const parsed = JSON.parse(text);
+      renderRawJson(JSON.stringify(parsed, null, 2), "Formatted JSON. Review and click Apply Raw JSON to commit it.");
+    } catch (err) {
+      const details = jsonParseDetails(text, err);
+      const location = details.line ? ` Line ${details.line}, column ${details.column}.` : "";
+      document.getElementById("rawStatus").outerHTML = `<div id="rawStatus" class="raw-error-box">Cannot format invalid JSON.${esc(location)} ${esc(details.message)}</div>`;
+    }
+  };
+  document.getElementById("resetRaw").onclick = () => {
+    if (!rawDiffersFromEdited(textarea.value) || confirm("Restore the raw editor from the current structured JSON and discard raw edits?")) renderRawJson();
+  };
+  document.getElementById("copyRawJson").onclick = () => copyCurrentJson();
+}
+
+function addValidationIssue(list, severity, group, section, path, message, extra = {}) {
+  list.push({severity, group, section, path, message, ...extra});
+}
+function issueText(issue) {
+  return `${issue.group}: ${issue.message}${issue.path ? ` (${issue.path})` : ""}`;
+}
+function isBlankValue(value) {
+  return value === null || value === undefined || String(value).trim() === "";
+}
+function duplicateValues(values) {
+  const seen = new Map();
+  const dupes = new Set();
+  values.forEach(v => {
+    const key = String(v ?? "").trim().toLowerCase();
+    if (!key) return;
+    if (seen.has(key)) dupes.add(key);
+    seen.set(key, true);
+  });
+  return dupes;
+}
+function duplicateSortIssues(list, group, section, basePath, issues, extra = {}) {
+  const seen = new Map();
+  (list || []).forEach((item, idx) => {
+    const sort = item?.sortOrder;
+    if (sort === null || sort === undefined || sort === "") return;
+    const key = String(sort);
+    if (seen.has(key)) {
+      addValidationIssue(issues, "warning", group, section, `${basePath}.${idx}.sortOrder`, `Duplicate sortOrder ${key}.`, extra);
+      addValidationIssue(issues, "warning", group, section, `${basePath}.${seen.get(key)}.sortOrder`, `Duplicate sortOrder ${key}.`, extra);
+    } else {
+      seen.set(key, idx);
+    }
+  });
+}
+function runFrontendValidation(apply = true) {
+  const issues = [];
+  if (!data) {
+    if (apply) {
+      validationIssues = [];
+      validationErrors = [];
+    }
+    return [];
+  }
+
+  ["name", "description", "slug"].forEach(key => {
+    if (isBlankValue(data[key])) addValidationIssue(issues, "error", "Metadata", "metadata", key, `Missing required metadata field: ${key}.`);
+  });
+
+  const initialTerms = data.contractTerms?.contractInitialTerm || [];
+  if (Array.isArray(initialTerms) && initialTerms.length) {
+    let defaults = 0;
+    initialTerms.forEach((term, idx) => {
+      if (Number(term.isDefault || 0) === 1) defaults++;
+      if (isBlankValue(term.termValue)) addValidationIssue(issues, "error", "Contract Terms", "contracts", `contractTerms.contractInitialTerm.${idx}.termValue`, "Contract term is missing termValue.");
+      if (isBlankValue(term.termUnit)) addValidationIssue(issues, "error", "Contract Terms", "contracts", `contractTerms.contractInitialTerm.${idx}.termUnit`, "Contract term is missing termUnit.");
+    });
+    if (defaults === 0) addValidationIssue(issues, "error", "Contract Terms", "contracts", "contractTerms.contractInitialTerm", "No default initial contract term is selected.");
+    if (defaults > 1) addValidationIssue(issues, "error", "Contract Terms", "contracts", "contractTerms.contractInitialTerm", "Multiple default initial contract terms are selected.");
+    duplicateSortIssues(initialTerms, "Contract Terms", "contracts", "contractTerms.contractInitialTerm", issues);
+  }
+
+  const packages = data.packages || [];
+  if (!Array.isArray(packages)) {
+    addValidationIssue(issues, "error", "Packages", "packages", "packages", "packages must be an array.");
+  } else {
+    const dupNames = duplicateValues(packages.map(p => p?.name || p?.internalName || ""));
+    let defaultCount = 0;
+    packages.forEach((pkg, pIdx) => {
+      const pPath = `packages.${pIdx}`;
+      const extra = {packageIndex: pIdx};
+      if (Number(pkg.isDefault || 0) === 1) defaultCount++;
+      if (isBlankValue(pkg.name) && isBlankValue(pkg.internalName)) addValidationIssue(issues, "error", "Packages", "packages", `${pPath}.name`, `Package ${pIdx + 1} is missing a name.`, extra);
+      const nameKey = String(pkg.name || pkg.internalName || "").trim().toLowerCase();
+      if (nameKey && dupNames.has(nameKey)) addValidationIssue(issues, "warning", "Packages", "packages", `${pPath}.name`, `Duplicate package name: ${pkg.name || pkg.internalName}.`, extra);
+
+      const volumes = pkg.monthlyVolumes || [];
+      duplicateSortIssues(volumes, "Monthly Volume Bands", "packages", `${pPath}.monthlyVolumes`, issues, {...extra, packageMode: "volumes"});
+      const analysis = analyzeVolumeBands(volumes);
+      Object.entries(analysis.byIndex || {}).forEach(([idx, bandIssues]) => {
+        bandIssues.forEach(item => addValidationIssue(
+          issues,
+          item.type === "error" ? "error" : "warning",
+          "Monthly Volume Bands",
+          "packages",
+          `${pPath}.monthlyVolumes.${idx}`,
+          `Package ${pIdx + 1}, band ${Number(idx) + 1}: ${item.text}.`,
+          {...extra, packageMode: "volumes"}
+        ));
+      });
+
+      const pkgGroups = pkg.optionItems || [];
+      duplicateSortIssues(pkgGroups, "Option Items", "packages", `${pPath}.optionItems`, issues, {...extra, packageMode: "pkgOptions"});
+      pkgGroups.forEach((group, gIdx) => validateOptionGroup(group, `packages.${pIdx}.optionItems.${gIdx}`, issues, "Package Option Items", "packages", {...extra, packageMode: "pkgOptions"}));
+    });
+    if (packages.length && defaultCount === 0) addValidationIssue(issues, "warning", "Packages", "packages", "packages", "No default package is selected.");
+    if (defaultCount > 1) addValidationIssue(issues, "error", "Packages", "packages", "packages", "Multiple default packages are selected.");
+    duplicateSortIssues(packages, "Packages", "packages", "packages", issues);
+  }
+
+  (data.optionItems || []).forEach((group, gIdx) => validateOptionGroup(group, `optionItems.${gIdx}`, issues, "Option Items", "options", {}));
+  duplicateSortIssues(data.optionItems || [], "Option Items", "options", "optionItems", issues);
+
+  (data.customAttributes || []).forEach((attr, idx) => {
+    if (isBlankValue(attr.name)) addValidationIssue(issues, "warning", "Custom Attributes", "custom", `customAttributes.${idx}.name`, `Custom attribute ${idx + 1} is missing a name.`);
+  });
+  duplicateSortIssues(data.customAttributes || [], "Custom Attributes", "custom", "customAttributes", issues);
+
+  if (apply) {
+    validationIssues = issues;
+    validationErrors = issues.map(issueText);
+  }
+  return issues;
+}
+function validateOptionGroup(group, basePath, issues, groupLabel, section, extra = {}) {
+  if (isBlankValue(group?.optionItemType)) addValidationIssue(issues, "warning", groupLabel, section, `${basePath}.optionItemType`, "Option group is missing optionItemType.", extra);
+  const lines = group?.optionLineItems || [];
+  duplicateSortIssues(lines, groupLabel, section, `${basePath}.optionLineItems`, issues, extra);
+  lines.forEach((line, liIdx) => {
+    const linePath = `${basePath}.optionLineItems.${liIdx}`;
+    const hasName = !isBlankValue(line.internalName) || !isBlankValue(line.marketingTitle) || !isBlankValue(line.shortDescription);
+    if (!hasName) addValidationIssue(issues, "error", groupLabel, section, `${linePath}.internalName`, `Line item ${liIdx + 1} is missing a name.`, extra);
+    const looksBillable = !isBlankValue(line.unit) || !isBlankValue(line.amountDescription) || Number(line.useTransactionUnitAmount || 0) === 1;
+    if (looksBillable && isBlankValue(line.amount)) addValidationIssue(issues, "warning", groupLabel, section, `${linePath}.amount`, `Line item ${liIdx + 1} looks billable but amount is blank.`, extra);
+  });
+}
+function filterValidationIssues(issues, filterText) {
+  const needle = String(filterText || "").trim().toLowerCase();
+  if (!needle) return issues;
+  return issues.filter(issue => [issue.group, issue.section, issue.path, issue.message, issue.severity].join(" ").toLowerCase().includes(needle));
+}
+function groupValidationIssues(issues) {
+  return issues.reduce((acc, issue) => {
+    acc[issue.group] = acc[issue.group] || [];
+    acc[issue.group].push(issue);
+    return acc;
+  }, {});
+}
+function updateValidationBadges() {
+  const pkgCount = data?.packages?.length || 0;
+  const termsCount = (data?.contractTerms?.contractInitialTerm || []).length;
+  const optionCount = data?.optionItems?.length || 0;
+  const customCount = data?.customAttributes?.length || 0;
+  const inventory = {
+    metadata: 0,
+    contracts: termsCount,
+    packages: pkgCount,
+    options: optionCount,
+    custom: customCount,
+  };
+  Object.entries(inventory).forEach(([section, count]) => {
+    const el = document.getElementById(section === "packages" ? "pkgBadge" : section + "Badge");
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count;
+      el.className = "nav-badge count";
+    } else {
+      el.textContent = "0";
+      el.className = "nav-badge count hidden";
+    }
+  });
+  const validationEl = document.getElementById("validationBadge");
+  if (validationEl) {
+    const total = (validationIssues || []).length;
+    validationEl.textContent = total;
+    validationEl.className = `nav-badge issue ${total ? "" : "hidden"}`;
+  }
+}
+function jumpToIssue(row) {
+  currentSection = row.dataset.jumpSection || "validation";
+  if (row.dataset.jumpPackage !== "") activePackageIndex = Number(row.dataset.jumpPackage);
+  if (row.dataset.jumpMode) activePackageMode = row.dataset.jumpMode;
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.section === currentSection));
+  render();
+}
+
+
+// v2.0.17 Optum-fidelity preview helpers
+const previewCheckedPackages = new Set();
+let previewOtfOpen = true;
+let previewAddonsOpen = false;
+
+function getCustomAttr(d, name) {
+  const attrs = (d && d.customAttributes) || [];
+  const attr = attrs.find(a => a && String(a.name || '').trim() === name);
+  return attr ? (attr.value || '') : '';
+}
+
+function previewCategoryLabel(viewTemplate) {
+  if (!viewTemplate) return '';
+  const t = String(viewTemplate).toLowerCase();
+  if (t.includes('api')) return 'Application Programming Interface';
+  if (t.includes('software')) return 'Software';
+  return viewTemplate;
+}
+
+function previewFmt$(n) {
+  const v = parseFloat(n);
+  if (isNaN(v)) return '$0.00';
+  return v === 0 ? '$0.00' : '$' + v.toFixed(2);
+}
+
+function previewFmtRange(mv) {
+  const min = mv.minimumValue ?? 0;
+  const max = mv.maximumValue;
+  if (max === null || max === undefined || max === '' || Number(max) >= 999999999) {
+    return `${Number(min).toLocaleString()}+ requests per month`;
+  }
+  return `${Number(min).toLocaleString()} \u2013 ${Number(max).toLocaleString()} requests per month`;
+}
+
+function previewFmtPrice(mv) {
+  const price = parseFloat(mv.transactionUnitAmount ?? 0);
+  const unit = mv.unit || '';
+  if (price === 0) return unit || 'Included';
+  return `${previewFmt$(price)}/${unit}`;
+}
+
+function getTopLevelOptionGroup(d, type) {
+  const groups = (d && d.optionItems) || [];
+  return groups.find(g => g && String(g.optionItemType || '').trim() === type) || null;
+}
+
+function previewAddonLabel(item) {
+  return esc(item.marketingTitle || item.internalName || item.shortDescription || 'Add-on');
+}
+
+function previewAddonDescription(item) {
+  return item.longDescription || item.shortDescription || item.toolTipDescription || '';
+}
+
+function previewAddonAmount(item) {
+  const amt = parseFloat(item.amount ?? 0);
+  const txn = parseFloat(item.transactionUnitAmount ?? 0);
+  const amount = amt !== 0 ? amt : txn;
+  const unit = item.unit || item.subUnitDescription || item.subUnit || '';
+  const money = previewFmt$(amount);
+  return `${money}${unit ? `<span class="op-addon-unit">${esc(unit)}</span>` : ''}`;
+}
+
+function renderOptumPreview() {
+  if (!data) {
+    previewBody.innerHTML = `<div class="empty">No JSON loaded.</div>`;
+    return;
+  }
+
+  const packages = data.packages || [];
+  const multi = previewCheckedPackages.size > 1;
+
+  // Monthly total from checked packages
+  let monthly = 0;
+  previewCheckedPackages.forEach(i => {
+    const pkg = packages[i];
+    if (pkg && pkg.amount) monthly += parseFloat(pkg.amount) || 0;
+  });
+
+  // Option groups
+  const implGroup  = getTopLevelOptionGroup(data, 'Implementations');
+  const addonGroup = getTopLevelOptionGroup(data, 'Addons');
+  const implItem   = implGroup  && implGroup.optionLineItems  && implGroup.optionLineItems[0]  ? implGroup.optionLineItems[0]  : null;
+  const implAmt    = implItem   ? (parseFloat(implItem.amount) || 0) : 0;
+  const implDisc   = multi ? implAmt : 0;
+  const implNet    = implAmt - implDisc;
+  const addonCount = addonGroup && addonGroup.optionLineItems ? addonGroup.optionLineItems.length : 0;
+
+  // Discount tooltips from customAttributes
+  const discountTooltip = getCustomAttr(data, 'packageMonthlySummaryDiscountToolTip');
+  const implWaiverTooltip = getCustomAttr(data, 'implementationSummaryDiscountToolTip');
+  const implHeaderHtml = [
+    implGroup ? (implGroup.headerDescription || '') : '',
+    multi && implWaiverTooltip ? implWaiverTooltip : ''
+  ].filter(Boolean).join(' ');
+
+  // Package cards HTML
+  const pkgCardsHtml = packages.map((pkg, i) => {
+    const sel = previewCheckedPackages.has(i);
+    const name = esc(pkg.name || pkg.internalName || 'Package');
+    const priceDesc = esc(pkg.amountDescription || '');
+    const subtitle = esc(pkg.marketingTitle || '');
+    const bands = (pkg.monthlyVolumes || []).map(mv =>
+      `<div class="op-tier-row">
+        <span class="op-tier-range">${esc(previewFmtRange(mv))}</span>
+        <span class="op-tier-dots"></span>
+        <span class="op-tier-price">${esc(previewFmtPrice(mv))}</span>
+      </div>`
+    ).join('');
+    return `<div class="op-pkg-card${sel ? ' op-sel' : ''}" data-pkgidx="${i}">
+      <div class="op-pkg-cb">
+        <svg class="op-pkg-ck" width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="op-pkg-left">
+        <div class="op-pkg-name">${name}</div>
+        <div class="op-pkg-price">${priceDesc}</div>
+        <div class="op-pkg-sub">${subtitle}</div>
+      </div>
+      <div class="op-pkg-right">${bands}</div>
+    </div>`;
+  }).join('');
+
+  // Implementation section HTML
+  const implHtml = implGroup ? `
+    <div class="op-section-divider"></div>
+    <div class="op-h2">Implementation</div>
+    <div class="op-body-text">${implHeaderHtml}</div>
+    <div class="op-section-sublabel" style="margin-bottom:6px">Required with your package</div>
+    <div class="op-impl-card">
+      <div>
+        <div class="op-impl-name">${esc(implItem ? (implItem.internalName || '') : '')}</div>
+        <div class="op-impl-desc">${implItem ? (implItem.longDescription || implItem.shortDescription || '') : ''}</div>
+      </div>
+      <div class="op-impl-price-col">
+        ${multi ? `<div class="op-impl-orig">${previewFmt$(implAmt)}</div>` : ''}
+        <div class="op-impl-new">${multi ? '$0.00' : previewFmt$(implAmt)}</div>
+        <div class="op-impl-unit">${esc(implItem ? (implItem.unit || 'one-time fee') : 'one-time fee')}</div>
+      </div>
+    </div>` : '';
+
+  // Add-ons section HTML
+  const addonItems = addonGroup && Array.isArray(addonGroup.optionLineItems) ? addonGroup.optionLineItems : [];
+  const addonItemsHtml = addonItems.map(item => `
+    <div class="op-addon-item">
+      <div class="op-addon-name">${previewAddonLabel(item)}</div>
+      <div class="op-addon-desc">${previewAddonDescription(item)}</div>
+      <div class="op-addon-price">${previewAddonAmount(item)}</div>
+    </div>
+  `).join('');
+  const addonHtml = addonGroup ? `
+    <div class="op-section-divider"></div>
+    <div class="op-h2">Add-ons</div>
+    <div class="op-section-sublabel">Add-ons available with your package</div>
+    <div class="op-body-text">${addonGroup.headerDescription || ''}</div>
+    <div class="op-addon-row${previewAddonsOpen ? ' op-open' : ''}" id="opAddonHead" role="button" tabindex="0" aria-expanded="${previewAddonsOpen ? 'true' : 'false'}">
+      <div class="op-addon-row-label">${addonCount} Add-on option${addonCount !== 1 ? 's' : ''}</div>
+      <div class="op-addon-expand-btn">
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M2 4l3 3 3-3" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    ${previewAddonsOpen ? `<div class="op-addon-body">${addonItemsHtml || '<div class="op-addon-desc">No add-on line items found.</div>'}</div>` : ''}` : '';
+
+  // Order Summary HTML
+  const otfBodyStyle = previewOtfOpen ? 'display:flex;flex-direction:column;gap:3px' : 'display:none';
+  const otfArrowStyle = previewOtfOpen ? 'transform:rotate(180deg)' : '';
+  const summaryHtml = `
+    <div class="op-summary-box">
+      <div class="op-summary-title">Order summary</div>
+      <div class="op-costs-head">
+        <span>Monthly costs</span>
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 4l3 3 3-3" stroke="#8fa3bb" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </div>
+      <div class="op-sum-row"><span class="op-sum-lbl">Est. monthly payment:</span><span class="op-sum-val op-big">${previewFmt$(monthly)}</span></div>
+      <div style="height:6px"></div>
+      <div class="op-sum-row" style="padding-bottom:2px"><span class="op-sum-lbl" style="font-weight:700;color:#f0f4ff;font-size:11px">Selected Add-Ons</span></div>
+      <div class="op-sum-row"><span class="op-sum-lbl">Included Add-Ons</span><span class="op-sum-val" style="font-size:10px">Based on Usage*</span></div>
+      <div class="op-sum-row"><span class="op-sum-lbl">Your Add-on costs</span><span class="op-sum-val">&mdash;</span></div>
+      <div class="op-sum-row"><span class="op-sum-lbl">Monthly subtotal:</span><span class="op-sum-val">${previewFmt$(monthly)}</span></div>
+      <div class="op-otf-head" id="opOtfHead">
+        <span class="op-otf-title">One-time fees</span>
+        <svg id="opOtfArrow" width="11" height="11" viewBox="0 0 11 11" fill="none" style="${otfArrowStyle};transition:transform .2s"><path d="M2 4l3 3 3-3" stroke="#8fa3bb" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </div>
+      <div id="opOtfBody" style="${otfBodyStyle}">
+        <div style="font-size:10px;font-weight:700;color:#8fa3bb;margin-bottom:2px">Selected Implementation</div>
+        <div class="op-otf-row"><span class="op-otf-lbl" style="font-size:10px">${esc(implItem ? (implItem.internalName || '') : 'Implementation Fee')}</span></div>
+        <div class="op-otf-row"><span class="op-otf-lbl">List price</span><span class="op-otf-val">${previewFmt$(implAmt)}</span></div>
+        ${multi ? `<div class="op-otf-row"><span class="op-otf-lbl" style="color:#00b050">100% off discount</span><span class="op-otf-val op-disc">-${previewFmt$(implDisc)}</span></div>` : ''}
+        <div class="op-otf-row" style="border-top:1px solid #2a3040;margin-top:3px;padding-top:3px"><span class="op-otf-lbl">Your Implementations costs</span><span class="op-otf-val">${previewFmt$(implNet)}</span></div>
+        <div class="op-otf-row"><span class="op-otf-lbl">One-time fees subtotal</span><span class="op-otf-val">$0.00</span></div>
+      </div>
+      <div class="op-sum-divider"></div>
+      <div class="op-promo-row">
+        <input placeholder="Enter Promo Code" style="font-size:10px;padding:4px 7px;border-radius:4px;flex:1">
+        <button>Apply</button>
+      </div>
+      <div class="op-sum-row"><span class="op-sum-lbl">Initial payment:</span><span class="op-sum-val op-big">$0.00</span></div>
+      <button class="op-checkout-btn">Continue to checkout</button>
+      <div class="op-save-link">Save changes</div>
+    </div>
+    <div class="op-help-box">
+      <div class="op-help-title">Need help?</div>
+      <a class="op-help-link">You may find what you need in our FAQs</a>
+      <div class="op-help-desc">Or contact us for questions about quotes, implementation, or for other help.</div>
+      <button class="op-help-btn">Contact us</button>
+    </div>`;
+
+  // Build full preview HTML
+  previewBody.innerHTML = `
+    <div class="op-preview-wrap">
+      <div class="op-preview-cols">
+        <div class="op-preview-left">
+          <div class="op-cat-label">${esc(previewCategoryLabel(data.viewTemplate))}</div>
+          <div class="op-h1">${esc(data.name || 'Unnamed Product')}</div>
+          <div class="op-h2">Build your package</div>
+          <div class="op-body-text">${data.headerDescription || ''}</div>
+          <div class="op-notice-text">Pricing shown is for partners only.</div>
+          <div class="op-notice-text" style="margin-bottom:8px">If your volume levels are higher, OR you are a provider, <a href="#">contact us</a> to receive a private quote from our sales team.</div>
+          ${discountTooltip ? `<div class="op-discount-text">${discountTooltip}</div>` : ''}
+          <div id="opPkgCards">${pkgCardsHtml}</div>
+          ${implHtml}
+          ${addonHtml}
+          ${data.paymentSchedule ? `<div class="op-payment-notice">${String(data.paymentSchedule || '')}</div>` : ''}
+        </div>
+        <div class="op-preview-right">${summaryHtml}</div>
+      </div>
+    </div>`;
+
+  // Bind package card click handlers
+  previewBody.querySelectorAll('.op-pkg-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.pkgidx, 10);
+      if (previewCheckedPackages.has(idx)) {
+        previewCheckedPackages.delete(idx);
+      } else {
+        previewCheckedPackages.add(idx);
+      }
+      renderOptumPreview();
+    });
+  });
+
+  // Bind Add-ons accordion
+  const addonHead = document.getElementById('opAddonHead');
+  if (addonHead) {
+    const toggleAddons = () => {
+      previewAddonsOpen = !previewAddonsOpen;
+      renderOptumPreview();
+    };
+    addonHead.addEventListener('click', toggleAddons);
+    addonHead.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleAddons();
+      }
+    });
+  }
+
+  // Bind OTF accordion
+  const otfHead = document.getElementById('opOtfHead');
+  if (otfHead) {
+    otfHead.addEventListener('click', () => {
+      previewOtfOpen = !previewOtfOpen;
+      renderOptumPreview();
+    });
+  }
+}
+
+function renderPreview() {
+  if (currentPreview === "json" && !document.body.classList.contains("preview-mode")) {
+    previewBody.innerHTML = `<pre class="code">${esc(JSON.stringify(data, null, 2))}</pre>`;
+    return;
+  }
+  renderOptumPreview();
+}
+
+function togglePreviewMode(force) {
+  const next = typeof force === "boolean" ? force : !document.body.classList.contains("preview-mode");
+  if (next) {
+    layoutState.previewCollapsed = false;
+    layoutState.editorCollapsed = false;
+    saveLayoutState();
+    applyLayoutState();
+  }
+  document.body.classList.toggle("preview-mode", next);
+  renderPreview();
+}
+
+function updateShell() {
+  const pkgCount = data?.packages?.length || 0;
+  if (data) runFrontendValidation(true);
+  document.getElementById("fileName").textContent = currentFileName;
+  document.getElementById("dirtyDot").className = dirty ? "dot dirty" : "dot";
+  document.getElementById("pkgBadge").textContent = pkgCount;
+  document.getElementById("statusFile").textContent = "file: " + currentFileName;
+  document.getElementById("statusDirty").textContent = dirty ? "unsaved" : "saved";
+  document.getElementById("statusPath").textContent = "path: " + (currentFilePath || "blank");
+  updateValidationBadges();
+  const pill = document.getElementById("validationPill");
+  const errors = (validationIssues || []).filter(i => i.severity === "error").length;
+  const warnings = (validationIssues || []).filter(i => i.severity !== "error").length;
+  if (!data) {
+    pill.textContent = "No file loaded";
+    pill.className = "validation-pill warn";
+    document.getElementById("statusValidation").textContent = "validation: not run";
+  } else if (errors || warnings) {
+    pill.textContent = `${errors} error(s), ${warnings} warning(s)`;
+    pill.className = "validation-pill warn";
+    document.getElementById("statusValidation").textContent = validationRan ? `validation: ${errors + warnings} issue(s)` : `frontend: ${errors + warnings} issue(s)`;
+  } else {
+    pill.textContent = validationRan ? "Backend validated" : "Frontend clean";
+    pill.className = "validation-pill";
+    document.getElementById("statusValidation").textContent = validationRan ? "validation: ready" : "validation: not run";
+  }
+}
+function normalizeSort(arr) { arr.forEach((x, i) => { if (x && typeof x === "object") x.sortOrder = i; }); }
+function defaultContractTerm(sortOrder) { return {termValue: 1, termUnit: "Y", description: "", isDefault: 0, sortOrder, discountItems: []}; }
+function defaultMonthlyVolume(sortOrder) { return {internalName: "New Monthly Volume", minimumValue: 1, maximumValue: 1000, amount: 0, amountDescription: "", transactionUnitAmount: 0, unit: "month", subCount: 0, subUnitType: "transactions", subUnit: "month", subUnitDescription: "", isDefault: 0, sortOrder, termAmounts: [], discountItems: []}; }
+function defaultOptionGroup() { return {optionItemType: "New Group", headerDescription: "", toolTipText: "", toolTipDescription: "", headerDescription2: "", toolTipText2: "", toolTipDescription2: "", customAttributes: [], discountItems: [], optionLineItems: []}; }
+function defaultLineItem() { return {catalogCode: "", internalName: "New Option", marketingTitle: "", tagline: "", toolTipDescription: "", shortDescription: "", longDescription: "", amount: 0, amountDescription: "", useTransactionUnitAmount: 0, unit: "", subCount: 0, subUnitType: "", subUnit: "", subUnitDescription: "", isIncluded: 0, isDefault: 0, isCountable: 0, countableMin: 0, countableMax: 0, sortOrder: 0, customAttributes: [], discountItems: [], termAmounts: []}; }
+function defaultPackage() { return {internalName: "New Package", name: "New Package", marketingTitle: "", tagline: "", toolTipDescription: "", shortDescription: "", longDescription: "", amount: 0, amountDescription: "", unit: "month", subCount: 0, subUnitType: "", subUnit: "", subUnitDescription: "", isDefault: 0, isCountable: 0, countableMin: 0, countableMax: 0, sortOrder: 0, includedModuleText: "", customAttributes: [], productItems: [], monthlyVolumes: [], discountItems: [], optionItems: []}; }
+
+async function openFile() {
+  if (!confirmCanReplaceOpenFile()) return;
+  if (window.showOpenFilePicker) {
+    try {
+      const [handle] = await window.showOpenFilePicker({types: [{description: "JSON", accept: {"application/json": [".json"]}}]});
+      browserFileHandle = handle;
+      const file = await handle.getFile();
+      const text = await file.text();
+      loadJson(text, file.name);
+      return;
+    } catch (err) {
+      if (err.name === "AbortError") return;
+    }
+  }
+  fileInput.click();
+}
+function loadJson(text, name) {
+  try {
+    data = JSON.parse(text);
+    originalData = clone(data);
+    currentFileName = name || "loaded.json";
+    currentFilePath = recallPathForFile(currentFileName) || currentFileName;
+    dirty = false;
+    validationErrors = [];
+    validationIssues = [];
+    validationRan = false;
+    activePackageIndex = 0;
+    previewCheckedPackages.clear();
+    previewAddonsOpen = false;
+    runFrontendValidation(true);
+    render();
+  } catch (err) {
+    alert("Could not parse JSON: " + err.message);
+  }
+}
+async function validateData() {
+  if (!data) return alert("Open a JSON file first.");
+  try {
+    const frontendIssues = runFrontendValidation(false);
+    const res = await fetch("/validate", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({data})});
+    const json = await res.json();
+    const backendIssues = (json.errors || []).map((message, idx) => ({severity: "error", group: "Backend", section: "validation", path: `backend.${idx}`, message}));
+    validationIssues = [...frontendIssues, ...backendIssues];
+    validationErrors = validationIssues.map(issueText);
+    validationRan = true;
+    updateShell();
+    if (currentSection === "validation") renderValidation();
+    alert(validationIssues.length ? `Validation found ${validationIssues.length} issue(s).` : "Validation passed.");
+  } catch (err) {
+    alert("Validation request failed: " + err.message);
+  }
+}
+function shouldWarnBeforeSave() {
+  const issues = runFrontendValidation(true);
+  const errors = issues.filter(i => i.severity === "error");
+  const warnings = issues.filter(i => i.severity !== "error");
+  if (errors.length) {
+    alert(`Save Copy is blocked because frontend validation has ${errors.length} error(s). Open Validation to review. Fix validation errors before saving.`);
+    return false;
+  }
+  if (!validationRan) return confirm("Backend validation has not been run for the latest edits. Save Copy anyway using frontend checks only?");
+  if (warnings.length) return confirm(`Validation has ${warnings.length} warning(s). Save Copy anyway?`);
+  return true;
+}
+async function saveVersion() {
+  if (!data) return alert("Open a JSON file first.");
+  if (!shouldWarnBeforeSave()) return;
+  if (!currentFilePath || currentFilePath === currentFileName || !currentFilePath.toLowerCase().endsWith(".json")) {
+    currentFilePath = prompt("Enter the full source JSON path. The backend will save a versioned copy in the same folder:", currentFilePath || currentFileName) || "";
+    if (!currentFilePath) return;
+  }
+  try {
+    const res = await fetch("/save", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({path: currentFilePath, data})});
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Save failed");
+    lastSaveMessage = `Saved backend copy: ${json.saved_as}`;
+    rememberCurrentPath();
+    addSaveHistory("Saved copy", json.saved_as, json.path || currentFilePath);
+    markSaved(true);
+    if (currentSection === "save") renderSaveExport();
+    alert("Saved as " + json.saved_as);
+  } catch (err) {
+    lastSaveMessage = "Backend save failed: " + err.message;
+    updateShell();
+    if (currentSection === "save") renderSaveExport();
+    alert("Save failed: " + err.message);
+  }
+}
+function downloadJson() {
+  if (!data) return alert("Open a JSON file first.");
+  if (!shouldWarnBeforeSave()) return;
+  const base = (currentFileName || "pricing.json").replace(/\.json$/i, "");
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15).replace("T", "_");
+  const name = `${base}_${APP_VERSION_JS}_${stamp}.json`;
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  lastSaveMessage = `Downloaded browser copy: ${name}`;
+  addSaveHistory("Downloaded JSON", name, "browser downloads");
+  markSaved(true);
+  if (currentSection === "save") renderSaveExport();
+}
+function discardChanges() {
+  if (!originalData) return;
+  if (dirty && !confirm("Discard unsaved changes?")) return;
+  data = clone(originalData);
+  dirty = false;
+  validationErrors = [];
+  validationRan = false;
+  render();
+}
+
+fileInput.addEventListener("change", async e => {
+  if (!confirmCanReplaceOpenFile()) { e.target.value = ""; return; }
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  browserFileHandle = null;
+  loadJson(text, file.name);
+});
+document.getElementById("openBtn").onclick = openFile;
+document.getElementById("discardBtn").onclick = discardChanges;
+document.getElementById("validateBtn").onclick = validateData;
+document.getElementById("saveBtn").onclick = saveVersion;
+document.getElementById("downloadBtn").onclick = downloadJson;
+document.getElementById("previewModeBtn").onclick = () => togglePreviewMode();
+document.querySelectorAll(".nav-item[data-section]").forEach(item => item.onclick = () => {
+  document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
+  item.classList.add("active");
+  currentSection = item.dataset.section;
+  render();
+});
+document.querySelectorAll(".preview-tab").forEach(tab => tab.onclick = () => {
+  document.querySelectorAll(".preview-tab").forEach(x => x.classList.remove("active"));
+  tab.classList.add("active");
+  currentPreview = tab.dataset.preview;
+  renderPreview();
+});
+
+setupPanelResizing();
+ensureLoaded();
+updateShell();
+</script>
+</body>
+</html>

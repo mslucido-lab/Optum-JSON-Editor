@@ -1,0 +1,698 @@
+{
+  "name": "Medical Network APIs",
+  "description": "Medical Network APIs",
+  "slug": "mn",
+  "maxQuantity": 1,
+  "catalogCode": "CHC-m0ck00008806",
+  "viewTemplate": "API-Tiered-Public",
+  "imageName": "",
+  "headerDescription": "<b>Optimize claims handling and boost payer and patient satisfaction</b> with custom tools built for the specific demands of medical networks. Do you need higher volume levels for requests? <a id = 'contact-sales-link' style='color: inherit !import; cursor: pointer'><u>Contact us to receive a private quote from our sales team.</u></a><br><br><b>7% off discount applies</b> with combination of Eligibility, Institutional or Professional Claims API, and ERA. Discount doesn't apply for Claim Status",
+  "toolTipText": "",
+  "toolTipDescription": "",
+  "paymentSchedule": "No payment is required to check out at this time; all charges will be invoices.<br>Per Transaction pricing is applied incrementally.<br>Additional Pass-through fees, if any, shall be charged in addition to the foregoing fees.<br>",
+  "itemContact": {
+    "email": "marketplacesupport@optum.com",
+    "emailSubject": "(TBD)Default Subject",
+    "emailContent": "(TBD)Default Email Content"
+  },
+  "customAttributes": [
+    {
+      "name": "packageMonthlySummaryDiscountToolTip",
+      "description": "Tool tip for Package monthly summary costs discount",
+      "value": "<b>7% off discount</b> applies with combination of Eligibility, Institutional or Professional Claims API, and ERA. Discount doesn't apply for Claim Status.",
+      "isRequired": true,
+      "displayFor": 1,
+      "sortOrder": 0
+    },
+    {
+      "name": "implementationSummaryDiscountToolTip",
+      "description": "Tool tip for implementation summary costs discount",
+      "value": "<b>100% off discount</b> Implementation fee is waived (100% off discount) applies with the combination of more than one API",
+      "isRequired": true,
+      "displayFor": 1,
+      "sortOrder": 1
+    }
+  ],
+  "discountItems": [],
+  "contractTerms": {},
+  "packages": [
+    {
+      "internalName": "Eligibility",
+      "name": "Eligibility",
+      "marketingTitle": "Minimum charged monthly for service",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 500,
+      "amountDescription": "Starting at $200.00/month",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 0,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 0,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [
+        {
+          "catalogCode": "CHC-m0ck00001234",
+          "sortOrder": 0,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "Eligibility Monthly Volume 1",
+          "minimumValue": 0,
+          "maximumValue": 1000,
+          "amount": 0,
+          "amountDescription": "Included",
+          "transactionUnitAmount": 0,
+          "unit": "Included",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "discountItems": []
+        },
+        {
+          "internalName": "Eligibility Monthly Volume 2",
+          "minimumValue": 1001,
+          "maximumValue": 40000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.18,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 1,
+          "discountItems": []
+        },
+        {
+          "internalName": "Eligibility Monthly Volume 3",
+          "minimumValue": 40001,
+          "maximumValue": 100000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.15,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 2,
+          "discountItems": []
+        }
+      ],
+      "discountItems": [
+        {
+          "ruleName": "PercentageOff",
+          "description": "Receive a 7% off discount for product combinations of Eligibility, one of the Claims APIs, and ERA.",
+          "customRules": "(catalogCode eq 'CHC-m0ck00001234' && catalogCode eq 'CHC-m0ck00007780') ~&~ (catalogCode eq 'CHC-m0ck00001240' || catalogCode eq 'CHC-m0ck00001239')",
+          "discounts": [
+            {
+              "dollarOff": 0,
+              "percentageOff": 7,
+              "thresholdAmount": 0,
+              "validFrom": "",
+              "validTo": ""
+            }
+          ]
+        }
+      ],
+      "optionItems": []
+    },
+    {
+      "internalName": "Institutional_Claims",
+      "name": "Institutional Claims",
+      "marketingTitle": "Minimum charged monthly for service",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 250,
+      "amountDescription": "Starting at $250.00/month",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 0,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 1,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [
+        {
+          "catalogCode": "CHC-m0ck00001240",
+          "sortOrder": 0,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "Institutional Claims Monthly Volume 1",
+          "minimumValue": 0,
+          "maximumValue": 1000,
+          "amount": 0,
+          "amountDescription": "Included",
+          "transactionUnitAmount": 0,
+          "unit": "Included",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "discountItems": []
+        },
+        {
+          "internalName": "Institutional Claims Monthly Volume 2",
+          "minimumValue": 1001,
+          "maximumValue": 40000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.2,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 1,
+          "discountItems": []
+        },
+        {
+          "internalName": "Institutional Claims Monthly Volume 3",
+          "minimumValue": 40001,
+          "maximumValue": 100000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.18,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 1,
+          "sortOrder": 2,
+          "discountItems": []
+        }
+      ],
+      "discountItems": [
+        {
+          "ruleName": "PercentageOff",
+          "description": "Receive a 7% off discount for product combinations of Eligibility, one of the Claims APIs, and ERA. ",
+          "customRules": "(catalogCode eq 'CHC-m0ck00001234' && catalogCode eq 'CHC-m0ck00007780') ~&~ (catalogCode eq 'CHC-m0ck00001240' || catalogCode eq 'CHC-m0ck00001239')",
+          "discounts": [
+            {
+              "dollarOff": 0,
+              "percentageOff": 7,
+              "thresholdAmount": 0,
+              "validFrom": "",
+              "validTo": ""
+            }
+          ]
+        }
+      ],
+      "optionItems": [
+        {
+          "optionItemType": "Addons",
+          "headerDescription": "This list shows additional fees applied when monthly volume limits are exceeded on applicable bundle add-on items, plus the rate of charges for applicable pay-as-you go items.",
+          "toolTipText": "",
+          "toolTipDescription": "",
+          "headerDescription2": "",
+          "toolTipText2": "",
+          "toolTipDescription2": "",
+          "customAttributes": [],
+          "discountItems": [],
+          "optionLineItems": [
+            {
+              "catalogCode": "CHC-m0ck00007781",
+              "internalName": "Integrated Rules Institutional",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "The <b>Integrated Rules Institutional</b> API enables a customer to perform claim scrubbing and fix any possible errors before sending the institutional claim to the payer. Using the Integrated Rules Knowledge Packs, our representatives can tailor institutional claims error checks and validations to the needs of the customer’s medical team.<br><br>You can order a Knowledge Pack that matches the medical company's specific Claims requirements — 1) if there is a need for a powerful General Billing capability, or 2) if you specialize in specific areas such as:<ul><li>Medicare,</li><li>Ambulance Place of Service,</li><li>Dialysis,</li><li>Or Prior Authorization</li></ul>The Integrated Rules Institutional API does not submit claims; it is a separate analysis tool. A customer must use the standard Institutional Claims API for claims submission.",
+              "amount": 0.08,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "per claim",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "per claim",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 0,
+              "customAttributes": [],
+              "discountItems": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "internalName": "Professional_Claims",
+      "name": "Professional Claims",
+      "marketingTitle": "Minimum charged monthly for service",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 250,
+      "amountDescription": "Starting at $250.00/month",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 0,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 2,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [
+        {
+          "catalogCode": "CHC-m0ck00001239",
+          "sortOrder": 0,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "Professional Claims Monthly Volume 1",
+          "minimumValue": 0,
+          "maximumValue": 1000,
+          "amount": 0,
+          "amountDescription": "Included",
+          "transactionUnitAmount": 0,
+          "unit": "Included",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "discountItems": []
+        },
+        {
+          "internalName": "Professional Claims Monthly Volume 2",
+          "minimumValue": 1001,
+          "maximumValue": 40000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.2,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 1,
+          "discountItems": []
+        },
+        {
+          "internalName": "Professional Claims Monthly Volume 3",
+          "minimumValue": 40001,
+          "maximumValue": 100000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.18,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 1,
+          "sortOrder": 2,
+          "discountItems": []
+        }
+      ],
+      "discountItems": [
+        {
+          "ruleName": "PercentageOff",
+          "description": "Receive a 7% off discount for product combinations of Eligibility, one of the Claims APIs, and ERA. ",
+          "customRules": "(catalogCode eq 'CHC-m0ck00001234' && catalogCode eq 'CHC-m0ck00007780') ~&~ (catalogCode eq 'CHC-m0ck00001240' || catalogCode eq 'CHC-m0ck00001239')",
+          "discounts": [
+            {
+              "dollarOff": 0,
+              "percentageOff": 7,
+              "thresholdAmount": 0,
+              "validFrom": "",
+              "validTo": ""
+            }
+          ]
+        }
+      ],
+      "optionItems": [
+        {
+          "optionItemType": "Addons",
+          "headerDescription": "This list shows additional fees applied when monthly volume limits are exceeded on applicable bundle add-on items, plus the rate of charges for applicable pay-as-you go items.",
+          "toolTipText": "",
+          "toolTipDescription": "",
+          "headerDescription2": "",
+          "toolTipText2": "",
+          "toolTipDescription2": "",
+          "customAttributes": [],
+          "discountItems": [],
+          "optionLineItems": [
+            {
+              "catalogCode": "CHC-m0ck00007782",
+              "internalName": "Integrated Rules Professional",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "The <b>Integrated Rules Professional</b> API enables a customer to perform claim scrubbing and fix any possible errors before sending the institutional claim to the payer. Using the Integrated Rules Knowledge Packs, our representatives can tailor professional claims error checks and validations to the needs of the customer’s medical team.<br><br>You can order a Knowledge Pack that matches the medical company's specific Claims requirements — 1) if there is a need for a powerful General Billing capability, or 2) if you specialize in specific areas such as:<ul><li>Medicare,</li><li>Ambulance Place of Service,</li><li>Dialysis,</li><li>Or Prior Authorization</li></ul>The Integrated Rules Professional API does not submit claims; it is a separate analysis tool. A customer must use the standard Professional Claims API for claims submission.",
+              "amount": 0.08,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "per claim",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "per claim",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 0,
+              "customAttributes": [],
+              "discountItems": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "internalName": "Claim Status",
+      "name": "Claim Status",
+      "marketingTitle": "No minimum charged monthly for service",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 0.2,
+      "amountDescription": "Starting at $0.20/request",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 0,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 3,
+      "includedModuleText": "",
+      "customAttributes": [
+        {
+          "name": "isSummableAmount",
+          "description": "Flag to determine for summing the amount to the total package amount",
+          "value": "N",
+          "isRequired": false,
+          "displayFor": 0,
+          "sortOrder": 0
+        }
+      ],
+      "productItems": [
+        {
+          "catalogCode": "CHC-m0ck00001236",
+          "sortOrder": 0,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "Claims Status Monthly Volume 1",
+          "minimumValue": 0,
+          "maximumValue": 1000,
+          "amount": 0.2,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.2,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "discountItems": []
+        },
+        {
+          "internalName": "Claims Status Monthly Volume 2",
+          "minimumValue": 1001,
+          "maximumValue": 40000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.18,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 1,
+          "discountItems": []
+        },
+        {
+          "internalName": "Claims Status Monthly Volume 3",
+          "minimumValue": 40001,
+          "maximumValue": 200000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.15,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 1,
+          "sortOrder": 2,
+          "discountItems": []
+        }
+      ],
+      "discountItems": [],
+      "optionItems": []
+    },
+    {
+      "internalName": "ERA",
+      "name": "Claims Responses & Reports (ERA)",
+      "marketingTitle": "Minimum charged monthly for service",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 120,
+      "amountDescription": "Starting at $120.00/month",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 0,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 4,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [
+        {
+          "catalogCode": "CHC-m0ck00007780",
+          "sortOrder": 0,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "ERA Monthly Volume 1",
+          "minimumValue": 0,
+          "maximumValue": 1000,
+          "amount": 0,
+          "amountDescription": "Included",
+          "transactionUnitAmount": 0,
+          "unit": "Included",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "discountItems": []
+        },
+        {
+          "internalName": "ERA Monthly Volume 2",
+          "minimumValue": 1001,
+          "maximumValue": 40000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.1,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 0,
+          "sortOrder": 1,
+          "discountItems": []
+        },
+        {
+          "internalName": "ERA Monthly Volume 3",
+          "minimumValue": 40001,
+          "maximumValue": 100000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0.08,
+          "unit": "request",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "requests per month",
+          "isDefault": 1,
+          "sortOrder": 2,
+          "discountItems": []
+        }
+      ],
+      "discountItems": [
+        {
+          "ruleName": "PercentageOff",
+          "description": "Receive a 7% off discount for product combinations of Eligibility, one of the Claims APIs, and ERA. ",
+          "customRules": "(catalogCode eq 'CHC-m0ck00001234' && catalogCode eq 'CHC-m0ck00007780') ~&~ (catalogCode eq 'CHC-m0ck00001240' || catalogCode eq 'CHC-m0ck00001239')",
+          "discounts": [
+            {
+              "dollarOff": 0,
+              "percentageOff": 7,
+              "thresholdAmount": 0,
+              "validFrom": "",
+              "validTo": ""
+            }
+          ]
+        }
+      ],
+      "optionItems": []
+    }
+  ],
+  "optionItems": [
+    {
+      "optionItemType": "Implementations",
+      "headerDescription": "<b>Get up and running faster</b> with our implementation services. Choose more than one API and <b>we'll waive the implementation fee.</b>",
+      "toolTipText": "",
+      "toolTipDescription": "",
+      "headerDescription2": "",
+      "toolTipText2": "",
+      "toolTipDescription2": "",
+      "customAttributes": [],
+      "discountItems": [],
+      "optionLineItems": [
+        {
+          "catalogCode": "CHC-mock00009207",
+          "internalName": "Implementation Fee for Medical Network APIs",
+          "marketingTitle": "",
+          "tagline": "",
+          "toolTipDescription": "",
+          "shortDescription": "",
+          "longDescription": "One time fee for set-up, onboarding, and configuration of the EDI Services completed by our team.  Information provided to you will include transport protocols, data formats, and other specifications identified by our implementation team.",
+          "amount": 500,
+          "amountDescription": "",
+          "useTransactionUnitAmount": 0,
+          "unit": "one-time fee",
+          "subCount": 0,
+          "subUnitType": "",
+          "subUnit": "",
+          "subUnitDescription": "",
+          "isIncluded": 1,
+          "isDefault": 0,
+          "isCountable": 0,
+          "countableMin": 0,
+          "countableMax": 0,
+          "sortOrder": 0,
+          "customAttributes": [],
+          "discountItems": [
+            {
+              "ruleName": "PercentageOff",
+              "description": "Discount of Implementation",
+              "customRules": "(len[packages] gt 1)",
+              "discounts": [
+                {
+                  "dollarOff": 0,
+                  "percentageOff": 100,
+                  "thresholdAmount": 0,
+                  "validFrom": "",
+                  "validTo": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "optionItemType": "Addons",
+      "headerDescription": "This list shows additional fees applied when monthly volume limits are exceeded on applicable bundle add-on items, plus the rate of charges for applicable pay-as-you go items.",
+      "toolTipText": "",
+      "toolTipDescription": "",
+      "headerDescription2": "",
+      "toolTipText2": "",
+      "toolTipDescription2": "",
+      "customAttributes": [],
+      "discountItems": [],
+      "optionLineItems": [
+        {
+          "catalogCode": "CHC-m0ck00007783",
+          "internalName": "Attachments Submission",
+          "marketingTitle": "",
+          "tagline": "",
+          "toolTipDescription": "",
+          "shortDescription": "",
+          "longDescription": "The <b>Attachments Submission</b> API supports the X12 EDI 275 Patient Information transaction. It translates this standard to JSON, so it is more accessible to developers for integration into users’ applications.<br><br>Submissions take two forms<ol><li>Solicited – usually sent by a payer to a provider requesting documentation for a claim</li><li>and Unsolicited – ex. Workman’s Compensation</li></ol><br><br>An attachment, in the context of healthcare electronic data interchange (EDI), is an electronic rendition of medical documentation, such as an X-ray, lab report, or questionnaire, to support a healthcare administrative transaction.<br><br>Our Attachment solution includes workers’ compensation attachments and medical attachments. Any receiver who does not support electronic attachments will receive the documentation through fax or mail.",
+          "amount": 0.5,
+          "amountDescription": "",
+          "useTransactionUnitAmount": 0,
+          "unit": "per attachment",
+          "subCount": 0,
+          "subUnitType": "",
+          "subUnit": "per attachment",
+          "subUnitDescription": "",
+          "isIncluded": 1,
+          "isDefault": 0,
+          "isCountable": 0,
+          "countableMin": 0,
+          "countableMax": 0,
+          "sortOrder": 0,
+          "customAttributes": [],
+          "discountItems": [],
+          "eligiblePackages": [
+            {
+              "internalName": "Institutional_Claims"
+            },
+            {
+              "internalName": "Professional_Claims"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

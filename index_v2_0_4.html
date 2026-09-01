@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pricing Editor v2.0.4</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2333;
+  --surface3: #21262d;
+  --border: #30363d;
+  --border2: #3d444d;
+  --amber: #d29922;
+  --amber-dim: #2a2010;
+  --green: #3fb950;
+  --green-dim: #0a2010;
+  --red: #f85149;
+  --red-dim: #2a0f0d;
+  --blue: #4493f8;
+  --blue-dim: #0d1e35;
+  --teal: #39c5cf;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --sans: Inter, Segoe UI, Arial, sans-serif;
+  --topbar-h: 46px;
+  --statusbar-h: 28px;
+  --nav-w: 205px;
+  --preview-w: 390px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; display: flex; flex-direction: column; }
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+.topbar { height: var(--topbar-h); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 14px; flex-shrink: 0; }
+.logo { font-family: var(--mono); color: var(--amber); font-size: 12px; font-weight: 700; letter-spacing: .08em; padding-right: 12px; border-right: 1px solid var(--border); white-space: nowrap; }
+.file-pill { display: flex; align-items: center; gap: 7px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text2); font-family: var(--mono); font-size: 11px; min-width: 240px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex: 0 0 auto; }
+.dot.dirty { background: var(--amber); }
+.spacer { flex: 1; }
+.btn { border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text2); padding: 6px 11px; font-size: 12px; }
+.btn:hover { border-color: var(--border2); color: var(--text); }
+.btn.primary { background: var(--amber); color: #0d1117; border-color: var(--amber); font-weight: 700; }
+.btn.green { color: var(--green); border-color: rgba(63,185,80,.45); }
+.btn.red { color: var(--red); border-color: rgba(248,81,73,.45); }
+.btn.blue { color: var(--blue); border-color: rgba(68,147,248,.45); }
+.validation-pill { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; padding: 4px 9px; border-radius: 5px; color: var(--green); background: var(--green-dim); border: 1px solid rgba(63,185,80,.35); }
+.validation-pill.warn { color: var(--red); background: var(--red-dim); border-color: rgba(248,81,73,.35); }
+.main { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+.nav { width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border); padding: 10px 0; overflow-y: auto; flex: 0 0 auto; }
+.nav-label { font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--text3); letter-spacing: .14em; text-transform: uppercase; padding: 10px 14px 4px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; color: var(--text2); border-left: 2px solid transparent; user-select: none; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--surface2); color: var(--amber); border-left-color: var(--amber); }
+.nav-icon { width: 16px; text-align: center; opacity: .8; }
+.nav-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); border: 1px solid var(--border); border-radius: 9px; padding: 1px 6px; }
+.nav-divider { height: 1px; background: var(--border); margin: 8px 0; }
+.editor { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 24px; }
+.preview { width: var(--preview-w); background: var(--surface); border-left: 1px solid var(--border); flex: 0 0 auto; display: flex; flex-direction: column; overflow: hidden; }
+.preview-tabs { display: flex; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.preview-tab { padding: 9px 14px; color: var(--text2); border-bottom: 2px solid transparent; user-select: none; }
+.preview-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.preview-body { flex: 1; min-height: 0; overflow: auto; padding: 14px; }
+.statusbar { height: var(--statusbar-h); background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 14px; color: var(--text3); font-family: var(--mono); font-size: 9px; flex: 0 0 auto; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.card-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.card-title { font-weight: 700; font-size: 12px; color: var(--text); }
+.card-sub { margin-left: auto; color: var(--text2); font-family: var(--mono); font-size: 10px; }
+.card-body { padding: 14px 16px; }
+.section-title { font-size: 18px; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+.section-title .sub { color: var(--text2); font-size: 11px; font-family: var(--mono); font-weight: 400; }
+.grid { display: grid; gap: 12px; }
+.cols1 { grid-template-columns: 1fr; }
+.cols2 { grid-template-columns: 1fr 1fr; }
+.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols4 { grid-template-columns: repeat(4, 1fr); }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+label { font-family: var(--mono); font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; }
+input, textarea, select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); padding: 7px 9px; outline: none; }
+textarea { min-height: 64px; resize: vertical; line-height: 1.45; }
+input:focus, textarea:focus, select:focus { border-color: var(--amber); }
+.help { color: var(--text3); font-size: 11px; margin-top: 4px; }
+.warnbox, .okbox { padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; font-size: 12px; }
+.warnbox { background: var(--red-dim); border: 1px solid rgba(248,81,73,.35); color: var(--red); }
+.okbox { background: var(--green-dim); border: 1px solid rgba(63,185,80,.35); color: var(--green); }
+.tabs { display: flex; gap: 0; overflow-x: auto; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.tab { padding: 9px 13px; white-space: nowrap; color: var(--text2); border-bottom: 2px solid transparent; user-select: none; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; color: var(--text3); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+td { padding: 5px 4px; border-bottom: 1px solid var(--surface2); vertical-align: top; }
+td input, td select { padding: 5px 6px; font-size: 12px; }
+.raw-json { width: 100%; min-height: 580px; font-family: var(--mono); font-size: 11px; line-height: 1.5; }
+.code { white-space: pre-wrap; font-family: var(--mono); font-size: 10px; line-height: 1.55; color: var(--text2); }
+.preview-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 11px 12px; margin-bottom: 10px; }
+.pp-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.pp-desc { color: var(--text2); font-size: 12px; line-height: 1.5; }
+.pp-price { color: var(--amber); font-family: var(--mono); font-size: 14px; margin-top: 6px; }
+.pp-head { color: var(--text3); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; margin: 14px 0 7px; }
+.badge { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 4px; color: var(--amber); background: var(--amber-dim); border: 1px solid rgba(210,153,34,.35); }
+.diff-grid { display: grid; gap: 10px; }
+.diff-row { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.diff-head { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--surface2); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text2); }
+.diff-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.diff-cell { padding: 9px 10px; min-width: 0; border-right: 1px solid var(--border); }
+.diff-cell:last-child { border-right: none; }
+.diff-label { font-family: var(--mono); font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.diff-value { font-family: var(--mono); font-size: 10px; color: var(--text2); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; }
+.diff-added { color: var(--green); }
+.diff-removed { color: var(--red); }
+.diff-changed { color: var(--amber); }
+.search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.search-row input { flex: 1; }
+.hidden { display: none !important; }
+.empty { color: var(--text3); font-style: italic; padding: 8px 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+@media (max-width: 1100px) {
+  :root { --preview-w: 330px; --nav-w: 180px; }
+  .cols3, .cols4 { grid-template-columns: 1fr 1fr; }
+}
+
+/* v2.0.2 layout usability */
+.topbar { position: sticky; top: 0; z-index: 40; }
+.statusbar { position: sticky; bottom: 0; z-index: 40; }
+.nav { position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h) - var(--statusbar-h)); }
+.editor { height: calc(100vh - var(--topbar-h) - var(--statusbar-h)); scroll-behavior: smooth; }
+.preview { height: calc(100vh - var(--topbar-h) - var(--statusbar-h)); }
+.section-title { position: sticky; top: -22px; z-index: 20; background: linear-gradient(var(--bg) 70%, rgba(13,17,23,0)); padding: 0 0 12px; }
+.action-row.sticky-actions { position: sticky; top: 24px; z-index: 18; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--border); }
+.tabs.sticky-tabs { position: sticky; top: 70px; z-index: 17; }
+details.card { display: block; }
+details.card > summary.card-head { list-style: none; cursor: pointer; }
+details.card > summary.card-head::-webkit-details-marker { display: none; }
+details.card > summary.card-head::before { content: "▸"; color: var(--text3); font-family: var(--mono); font-size: 11px; transition: transform .12s; }
+details.card[open] > summary.card-head::before { transform: rotate(90deg); }
+details.card:not([open]) { margin-bottom: 10px; }
+details.card:not([open]) > summary.card-head { border-bottom: none; }
+.head-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.card-head .head-actions + .card-sub { margin-left: 0; }
+.table-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--border); border-radius: 6px; }
+.table-scroll table { margin-bottom: 0; min-width: 940px; }
+.compact-note { color: var(--text2); font-family: var(--mono); font-size: 10px; }
+.package-summary { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.summary-tile { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; }
+.summary-label { color: var(--text3); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.summary-value { color: var(--text); font-size: 13px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.raw-json { height: calc(100vh - var(--topbar-h) - var(--statusbar-h) - 170px); min-height: 520px; overflow: auto; }
+.code { max-height: calc(100vh - var(--topbar-h) - var(--statusbar-h) - 95px); overflow: auto; }
+.preview-card { overflow-wrap: anywhere; }
+@media (max-width: 1120px) {
+  :root { --preview-w: 330px; --nav-w: 190px; }
+  .cols3, .cols4 { grid-template-columns: 1fr 1fr; }
+  .package-summary { grid-template-columns: 1fr 1fr; }
+}
+
+
+/* v2.0.3 resizable and collapsible panels */
+.splitter {
+  width: 7px;
+  flex: 0 0 7px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  cursor: col-resize;
+  position: relative;
+  z-index: 25;
+}
+.splitter::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 2px;
+  height: 44px;
+  border-left: 1px solid var(--border2);
+  border-right: 1px solid var(--border2);
+  transform: translateY(-50%);
+  opacity: .7;
+}
+.splitter:hover, .splitter.dragging { background: var(--surface2); }
+.splitter:hover::after, .splitter.dragging::after { border-color: var(--amber); opacity: 1; }
+body.resizing { user-select: none; cursor: col-resize; }
+body.nav-collapsed { --nav-w: 48px; }
+body.nav-collapsed .nav { overflow-x: hidden; }
+body.nav-collapsed .nav-label { opacity: 0; height: 10px; padding: 7px 0 0; overflow: hidden; }
+body.nav-collapsed .nav-item { white-space: nowrap; gap: 18px; padding-left: 14px; }
+body.nav-collapsed .nav-badge { display: none; }
+body.preview-collapsed .preview,
+body.preview-collapsed #previewSplitter { display: none; }
+.preview-restore-tab {
+  display: none;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: right bottom;
+  z-index: 80;
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(68,147,248,.45);
+  border-radius: 6px 6px 0 0;
+  padding: 6px 12px;
+  font-size: 11px;
+}
+body.preview-collapsed .preview-restore-tab { display: block; }
+body.nav-collapsed #toggleNavBtn,
+body.preview-collapsed #togglePreviewBtn { color: var(--amber); border-color: rgba(210,153,34,.55); background: var(--amber-dim); }
+.nav, .preview { transition: width .12s ease; }
+body.resizing .nav, body.resizing .preview { transition: none; }
+@media (max-width: 1120px) {
+  .splitter { width: 6px; flex-basis: 6px; }
+}
+
+/* v2.0.4 package actions and collapsible JSON windows */
+.json-window {
+  max-height: 340px;
+  overflow: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.55;
+  color: var(--text2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.raw-json-wrap .card-body { padding: 0; }
+.raw-json-wrap textarea.raw-json {
+  border: none;
+  border-radius: 0;
+  min-height: calc(100vh - 250px);
+  resize: vertical;
+}
+.package-action-help {
+  color: var(--text3);
+  font-size: 11px;
+  margin-top: -4px;
+  margin-bottom: 10px;
+}
+.package-action-row {
+  align-items: center;
+}
+
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">PRICING EDITOR</div>
+    <div class="file-pill"><span id="dirtyDot" class="dot"></span><span id="fileName">No file loaded</span></div>
+    <button class="btn blue" id="openBtn">Open JSON</button>
+    <input type="file" id="fileInput" accept="application/json,.json" class="hidden" />
+    <button class="btn" id="discardBtn">Discard</button>
+    <button class="btn green" id="validateBtn">Validate</button>
+    <button class="btn primary" id="saveBtn">Save Copy</button>
+    <button class="btn" id="downloadBtn">Download JSON</button>
+    <button class="btn" id="toggleNavBtn" title="Collapse or expand left navigation">☰ Nav</button>
+    <button class="btn" id="togglePreviewBtn" title="Collapse or expand right preview">▣ Preview</button>
+    <button class="btn" id="resetLayoutBtn" title="Reset panel widths">Reset Layout</button>
+    <div class="spacer"></div>
+    <div id="validationPill" class="validation-pill">No validation yet</div>
+  </div>
+
+  <div class="main">
+    <nav id="leftNav" class="nav">
+      <div class="nav-label">Sections</div>
+      <div class="nav-item active" data-section="metadata"><span class="nav-icon">⊞</span> Metadata</div>
+      <div class="nav-item" data-section="contracts"><span class="nav-icon">◑</span> Contract Terms</div>
+      <div class="nav-item" data-section="packages"><span class="nav-icon">◈</span> Packages <span id="pkgBadge" class="nav-badge">0</span></div>
+      <div class="nav-item" data-section="options"><span class="nav-icon">◇</span> Option Items</div>
+      <div class="nav-item" data-section="custom"><span class="nav-icon">⊙</span> Custom Attrs</div>
+      <div class="nav-divider"></div>
+      <div class="nav-label">Tools</div>
+      <div class="nav-item" data-section="save"><span class="nav-icon">▣</span> Save / Export</div>
+      <div class="nav-item" data-section="validation"><span class="nav-icon">✓</span> Validation</div>
+      <div class="nav-item" data-section="compare"><span class="nav-icon">⊡</span> Compare Versions</div>
+      <div class="nav-item" data-section="raw"><span class="nav-icon">⌥</span> Raw JSON</div>
+    </nav>
+
+    <div id="navSplitter" class="splitter" title="Drag to resize left nav. Double click to reset."></div>
+
+    <main id="editor" class="editor"></main>
+
+    <div id="previewSplitter" class="splitter" title="Drag to resize right preview. Double click to reset."></div>
+
+    <aside id="previewPanel" class="preview">
+      <div class="preview-tabs">
+        <div class="preview-tab active" data-preview="pricing">Pricing Preview</div>
+        <div class="preview-tab" data-preview="json">JSON</div>
+      </div>
+      <div id="previewBody" class="preview-body"></div>
+    </aside>
+    <button id="previewRestoreTab" class="preview-restore-tab" title="Reopen preview">Preview</button>
+  </div>
+
+  <div class="statusbar">
+    <span id="statusFile">file: none</span>
+    <span id="statusDirty">saved</span>
+    <span id="statusValidation">validation: not run</span>
+    <span id="statusPath">path: blank</span>
+  </div>
+
+<script>
+const APP_VERSION = "v2.0.4";
+let originalData = null;
+let data = null;
+let currentSection = "metadata";
+let currentPreview = "pricing";
+let currentFileName = "No file loaded";
+let currentFilePath = "";
+let dirty = false;
+let validationErrors = [];
+let validationRan = false;
+let activePackageIndex = 0;
+let activePackageMode = "details";
+let browserFileHandle = null;
+let lastSaveMessage = "No save or download yet.";
+
+const editor = document.getElementById("editor");
+const previewBody = document.getElementById("previewBody");
+const fileInput = document.getElementById("fileInput");
+
+const layoutDefaults = { navWidth: 205, previewWidth: 390, navCollapsed: false, previewCollapsed: false };
+let layoutState = { ...layoutDefaults };
+
+function clampNumber(value, min, max) {
+  const n = Number(value);
+  if (Number.isNaN(n)) return min;
+  return Math.max(min, Math.min(max, n));
+}
+function loadLayoutState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("pricingEditorLayoutV203") || "{}");
+    layoutState = { ...layoutDefaults, ...saved };
+  } catch (_) {
+    layoutState = { ...layoutDefaults };
+  }
+  layoutState.navWidth = clampNumber(layoutState.navWidth, 48, 380);
+  layoutState.previewWidth = clampNumber(layoutState.previewWidth, 260, 760);
+}
+function saveLayoutState() {
+  localStorage.setItem("pricingEditorLayoutV203", JSON.stringify(layoutState));
+}
+function applyLayoutState() {
+  document.documentElement.style.setProperty("--nav-w", `${layoutState.navCollapsed ? 48 : layoutState.navWidth}px`);
+  document.documentElement.style.setProperty("--preview-w", `${layoutState.previewWidth}px`);
+  document.body.classList.toggle("nav-collapsed", !!layoutState.navCollapsed);
+  document.body.classList.toggle("preview-collapsed", !!layoutState.previewCollapsed);
+  const navBtn = document.getElementById("toggleNavBtn");
+  const previewBtn = document.getElementById("togglePreviewBtn");
+  if (navBtn) navBtn.textContent = layoutState.navCollapsed ? "☰ Open" : "☰ Nav";
+  if (previewBtn) previewBtn.textContent = layoutState.previewCollapsed ? "▣ Open" : "▣ Preview";
+}
+function resetLayoutState() {
+  layoutState = { ...layoutDefaults };
+  saveLayoutState();
+  applyLayoutState();
+}
+function setupPanelResizing() {
+  loadLayoutState();
+  applyLayoutState();
+
+  const mainEl = document.querySelector(".main");
+  const navSplitter = document.getElementById("navSplitter");
+  const previewSplitter = document.getElementById("previewSplitter");
+  const navBtn = document.getElementById("toggleNavBtn");
+  const previewBtn = document.getElementById("togglePreviewBtn");
+  const resetBtn = document.getElementById("resetLayoutBtn");
+  const restoreTab = document.getElementById("previewRestoreTab");
+
+  function startDrag(splitter, mode, event) {
+    event.preventDefault();
+    document.body.classList.add("resizing");
+    splitter.classList.add("dragging");
+
+    function onMove(e) {
+      const rect = mainEl.getBoundingClientRect();
+      if (mode === "nav") {
+        layoutState.navCollapsed = false;
+        layoutState.navWidth = clampNumber(e.clientX - rect.left, 140, 380);
+      } else {
+        layoutState.previewCollapsed = false;
+        layoutState.previewWidth = clampNumber(rect.right - e.clientX, 260, 760);
+      }
+      applyLayoutState();
+    }
+    function onUp() {
+      document.body.classList.remove("resizing");
+      splitter.classList.remove("dragging");
+      saveLayoutState();
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
+  navSplitter.addEventListener("mousedown", e => startDrag(navSplitter, "nav", e));
+  previewSplitter.addEventListener("mousedown", e => startDrag(previewSplitter, "preview", e));
+  navSplitter.addEventListener("dblclick", resetLayoutState);
+  previewSplitter.addEventListener("dblclick", resetLayoutState);
+
+  navBtn.onclick = () => {
+    layoutState.navCollapsed = !layoutState.navCollapsed;
+    saveLayoutState();
+    applyLayoutState();
+  };
+  previewBtn.onclick = () => {
+    layoutState.previewCollapsed = !layoutState.previewCollapsed;
+    saveLayoutState();
+    applyLayoutState();
+  };
+  restoreTab.onclick = () => {
+    layoutState.previewCollapsed = false;
+    saveLayoutState();
+    applyLayoutState();
+  };
+  resetBtn.onclick = resetLayoutState;
+}
+
+
+function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+function money(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const n = Number(value);
+  if (Number.isNaN(n)) return "$" + value;
+  return n % 1 === 0 ? "$" + n.toLocaleString() : "$" + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+function cleanText(value) {
+  if (!value) return "";
+  const div = document.createElement("div");
+  div.innerHTML = String(value).replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<\/li>/gi, "\n").replace(/<li[^>]*>/gi, "• ");
+  return (div.textContent || div.innerText || "").replace(/\n{3,}/g, "\n\n").replace(/[ \t]+/g, " ").trim();
+}
+function truncate(value, max) {
+  const text = cleanText(value);
+  return text.length > max ? text.slice(0, max - 1).trimEnd() + "…" : text;
+}
+function byPath(path) {
+  const parts = path.split(".");
+  let obj = data;
+  for (const p of parts) {
+    if (obj == null) return undefined;
+    obj = obj[p];
+  }
+  return obj;
+}
+function setByPath(path, value) {
+  const parts = path.split(".");
+  let obj = data;
+  for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length - 1]] = value;
+  markDirty();
+}
+function parseInputValue(raw, current) {
+  if (typeof current === "number") {
+    if (raw === "") return 0;
+    const n = Number(raw);
+    return Number.isNaN(n) ? raw : n;
+  }
+  if (typeof current === "boolean") return raw === "true";
+  return raw;
+}
+function markDirty() {
+  dirty = true;
+  validationErrors = [];
+  validationRan = false;
+  updateShell();
+  renderPreview();
+}
+function markSaved(updateBaseline = true) {
+  dirty = false;
+  if (updateBaseline && data) originalData = clone(data);
+  updateShell();
+}
+function ensureLoaded() {
+  if (data) return true;
+  editor.innerHTML = `<div class="section-title">Open a JSON file <span class="sub">v2.0.3 frontend</span></div><div class="card"><div class="card-body"><p>Select Open JSON to load a pricing file.</p><p class="help">After loading, edit fields in the left sections and validate before saving.</p></div></div>`;
+  previewBody.innerHTML = `<div class="empty">No JSON loaded.</div>`;
+  return false;
+}
+
+function field(path, label, type = "text", opts = {}) {
+  const current = byPath(path);
+  const value = current ?? "";
+  const rows = opts.rows || 3;
+  if (type === "textarea") {
+    return `<div class="field"><label>${esc(label)}</label><textarea rows="${rows}" data-path="${esc(path)}">${esc(value)}</textarea>${opts.help ? `<div class="help">${esc(opts.help)}</div>` : ""}</div>`;
+  }
+  if (type === "select") {
+    const options = opts.options || [];
+    return `<div class="field"><label>${esc(label)}</label><select data-path="${esc(path)}">${options.map(o => `<option value="${esc(o.value)}" ${String(value) === String(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select></div>`;
+  }
+  return `<div class="field"><label>${esc(label)}</label><input type="${esc(type)}" value="${esc(value)}" data-path="${esc(path)}" /></div>`;
+}
+function bindPathInputs(root = editor) {
+  root.querySelectorAll("[data-path]").forEach(el => {
+    el.addEventListener("input", () => {
+      const current = byPath(el.dataset.path);
+      setByPath(el.dataset.path, parseInputValue(el.value, current));
+    });
+    el.addEventListener("change", () => {
+      const current = byPath(el.dataset.path);
+      setByPath(el.dataset.path, parseInputValue(el.value, current));
+    });
+  });
+}
+function bindIndexedInputs(root = editor) {
+  root.querySelectorAll("[data-index-path]").forEach(el => {
+    el.addEventListener("input", () => {
+      const path = el.dataset.indexPath;
+      const current = getIndexPath(path);
+      setIndexPath(path, parseInputValue(el.value, current));
+    });
+    el.addEventListener("change", () => {
+      const path = el.dataset.indexPath;
+      const current = getIndexPath(path);
+      setIndexPath(path, parseInputValue(el.value, current));
+    });
+  });
+}
+function getIndexPath(path) {
+  const parts = path.split(".");
+  let obj = data;
+  for (const part of parts) obj = obj?.[part];
+  return obj;
+}
+function setIndexPath(path, value) {
+  const parts = path.split(".");
+  let obj = data;
+  for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length - 1]] = value;
+  markDirty();
+}
+function inputForIndex(path, value, type = "text") {
+  return `<input type="${esc(type)}" value="${esc(value ?? "")}" data-index-path="${esc(path)}" />`;
+}
+function textareaForIndex(path, value) {
+  return `<textarea data-index-path="${esc(path)}">${esc(value ?? "")}</textarea>`;
+}
+
+function render() {
+  if (!ensureLoaded()) return;
+  if (currentSection === "metadata") renderMetadata();
+  if (currentSection === "contracts") renderContracts();
+  if (currentSection === "packages") renderPackages();
+  if (currentSection === "options") renderOptions();
+  if (currentSection === "custom") renderCustomAttrs();
+  if (currentSection === "save") renderSaveExport();
+  if (currentSection === "validation") renderValidation();
+  if (currentSection === "compare") renderCompare();
+  if (currentSection === "raw") renderRawJson();
+  updateShell();
+  renderPreview();
+}
+
+function collapsibleCard(title, body, options = {}) {
+  const open = options.open === false ? "" : " open";
+  const sub = options.sub ? `<div class="card-sub">${esc(options.sub)}</div>` : "";
+  const badge = options.badge ? `<span class="badge">${esc(options.badge)}</span>` : "";
+  const headExtra = options.headExtra ? `<span class="head-actions" onclick="event.stopPropagation()">${options.headExtra}</span>` : "";
+  const bodyClass = options.bodyClass || "";
+  return `<details class="card collapsible"${open}><summary class="card-head"><div class="card-title">${esc(title)}</div>${badge}${sub}${headExtra}</summary><div class="card-body ${bodyClass}">${body}</div></details>`;
+}
+function stickyActions(html) {
+  return `<div class="action-row sticky-actions">${html}</div>`;
+}
+function copyCurrentJson() {
+  if (!data) return;
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+    .then(() => { lastSaveMessage = "Current JSON copied to clipboard."; updateShell(); })
+    .catch(() => alert("Unable to copy JSON to clipboard."));
+}
+function renderMetadata() {
+  editor.innerHTML = `
+    <div class="section-title">Metadata <span class="sub">top-level product fields</span></div>
+    ${collapsibleCard("Product Identity", `<div class="grid cols3">
+      ${field("name", "Name")}
+      ${field("slug", "Slug")}
+      ${field("catalogCode", "Catalog Code")}
+      ${field("description", "Description")}
+      ${field("viewTemplate", "View Template")}
+      ${field("maxQuantity", "Max Quantity", "number")}
+    </div>`, {open: true})}
+    ${collapsibleCard("Marketing Copy", `<div class="grid cols1">
+      ${field("headerDescription", "Header Description", "textarea", {rows: 4, help: "HTML is preserved."})}
+      ${field("paymentSchedule", "Payment Schedule", "textarea", {rows: 3})}
+      <div class="grid cols2">${field("toolTipText", "Tooltip Text")}${field("toolTipDescription", "Tooltip Description")}</div>
+      ${field("imageName", "Image Name")}
+    </div>`, {badge: "HTML", open: true})}
+    ${renderItemContactCard()}
+    ${collapsibleCard("Save Target", `<div class="field"><label>Full path for backend save</label><input id="pathInput" value="${esc(currentFilePath)}" placeholder="Example: C:\\Dell Inspirion\\JSON Editor\\item_mn__08092024.json" /></div>
+      <div class="help">Chrome does not expose the full opened file path. Enter the source path here to use Save Version through FastAPI.</div>`, {open: false})}
+    ${collapsibleCard("JSON Snapshot", `<div class="action-row"><button class="btn blue" id="copyMetadataJson">Copy Current JSON</button><button class="btn" onclick="document.querySelector('[data-section=raw]').click()">Open Raw JSON Editor</button></div><pre class="json-window">${esc(JSON.stringify(data, null, 2))}</pre>`, {sub: "read-only", open: false})}`;
+  bindPathInputs();
+  document.getElementById("pathInput").addEventListener("input", e => { currentFilePath = e.target.value; updateShell(); });
+  const copyBtn = document.getElementById("copyMetadataJson");
+  if (copyBtn) copyBtn.onclick = () => copyCurrentJson();
+}
+function renderItemContactCard() {
+  if (!data.itemContact || typeof data.itemContact !== "object") return "";
+  return collapsibleCard("Contact", `<div class="grid cols3">
+    ${field("itemContact.email", "Email")}
+    ${field("itemContact.emailSubject", "Email Subject")}
+    ${field("itemContact.emailBody", "Email Body")}
+  </div>`, {open: false});
+}
+function renderContracts() {
+  data.contractTerms = data.contractTerms || {};
+  data.contractTerms.contractInitialTerm = data.contractTerms.contractInitialTerm || [];
+  data.contractTerms.contractAutoRenewalTerm = data.contractTerms.contractAutoRenewalTerm || [];
+  const terms = data.contractTerms.contractInitialTerm;
+  const auto = data.contractTerms.contractAutoRenewalTerm;
+  editor.innerHTML = `
+    <div class="section-title">Contract Terms <span class="sub">initial and auto-renewal</span></div>
+    ${stickyActions(`<button class="btn green" id="addTerm">+ Add Initial Term</button><button class="btn green" id="addAutoTerm">+ Add Auto-Renewal Term</button>`)}
+    ${collapsibleCard("Header Copy", `<div class="grid cols2">
+      ${field("contractTerms.headerDescription", "Header Description", "textarea")}
+      ${field("contractTerms.isAutoRenewalEnabled", "Auto Renewal Enabled", "select", {options: [{value: 0, label: "No"}, {value: 1, label: "Yes"}]})}
+    </div>`, {open: true})}
+    ${collapsibleCard("Initial Terms", renderTermsTable("contractInitialTerm", terms), {sub: `${terms.length} terms`, open: true})}
+    ${collapsibleCard("Auto Renewal Terms", renderTermsTable("contractAutoRenewalTerm", auto), {sub: `${auto.length} terms`, open: false})}`;
+  bindPathInputs();
+  bindIndexedInputs();
+  document.getElementById("addTerm").onclick = () => { terms.push(defaultContractTerm(terms.length)); markDirty(); render(); };
+  document.getElementById("addAutoTerm").onclick = () => { auto.push(defaultContractTerm(auto.length)); markDirty(); render(); };
+  editor.querySelectorAll("[data-set-default-term]").forEach(btn => btn.onclick = () => {
+    const group = data.contractTerms[btn.dataset.group];
+    group.forEach((term, idx) => { term.isDefault = idx === Number(btn.dataset.setDefaultTerm) ? 1 : 0; });
+    markDirty(); render();
+  });
+  editor.querySelectorAll("[data-del-term]").forEach(btn => btn.onclick = () => {
+    data.contractTerms[btn.dataset.group].splice(Number(btn.dataset.delTerm), 1);
+    normalizeSort(data.contractTerms[btn.dataset.group]);
+    markDirty(); render();
+  });
+}
+function renderTermsTable(groupName, terms) {
+  if (!terms.length) return `<div class="empty">No terms defined.</div>`;
+  return `<div class="table-scroll"><table><thead><tr><th>Value</th><th>Unit</th><th>Description</th><th>Default</th><th>Sort</th><th></th></tr></thead><tbody>${terms.map((t, i) => `
+    <tr>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.termValue`, t.termValue, "number")}</td>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.termUnit`, t.termUnit)}</td>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.description`, t.description)}</td>
+      <td><select data-index-path="contractTerms.${groupName}.${i}.isDefault"><option value="0" ${Number(t.isDefault || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(t.isDefault || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+      <td>${inputForIndex(`contractTerms.${groupName}.${i}.sortOrder`, t.sortOrder ?? i, "number")}</td>
+      <td><div class="action-row" style="margin:0"><button class="btn blue" data-group="${groupName}" data-set-default-term="${i}">Default</button><button class="btn red" data-group="${groupName}" data-del-term="${i}">Delete</button></div></td>
+    </tr>`).join("")}</tbody></table></div>`;
+}
+function renderPackages() {
+  const packages = data.packages || [];
+  if (activePackageIndex >= packages.length) activePackageIndex = Math.max(0, packages.length - 1);
+  const active = packages[activePackageIndex] || {};
+  const summary = packages.length ? `<div class="package-summary">
+    <div class="summary-tile"><div class="summary-label">Active</div><div class="summary-value">${esc(active.name || active.internalName || "Package")}</div></div>
+    <div class="summary-tile"><div class="summary-label">Amount</div><div class="summary-value">${esc(money(active.amount))}</div></div>
+    <div class="summary-tile"><div class="summary-label">Volume Bands</div><div class="summary-value">${(active.monthlyVolumes || []).length}</div></div>
+    <div class="summary-tile"><div class="summary-label">Option Groups</div><div class="summary-value">${(active.optionItems || []).length}</div></div>
+  </div>` : "";
+  editor.innerHTML = `
+    <div class="section-title">Packages <span class="sub">${packages.length} packages</span></div>
+    ${stickyActions(`<button class="btn green" id="addPackage">+ Add Package</button><button class="btn blue" id="dupPackage">Duplicate Active</button><button class="btn" id="movePkgUp">Move Up</button><button class="btn" id="movePkgDown">Move Down</button><button class="btn red" id="delPackage">Delete Active</button>`)}
+    ${summary}
+    <div class="card"><div class="tabs sticky-tabs">${packages.map((p, i) => `<div class="tab ${i === activePackageIndex ? "active" : ""}" data-pkg-tab="${i}">${i + 1}. ${esc(p.name || p.internalName || "Package")}</div>`).join("")}</div>
+      <div class="card-body">${packages.length ? renderPackageEditor(packages[activePackageIndex], activePackageIndex) : `<div class="empty">No packages found.</div>`}</div></div>`;
+  bindIndexedInputs();
+  document.getElementById("addPackage").onclick = () => { packages.push(defaultPackage()); activePackageIndex = packages.length - 1; normalizeSort(packages); markDirty(); render(); };
+  document.getElementById("dupPackage").onclick = () => {
+    if (!packages.length) return;
+    const copy = clone(packages[activePackageIndex]);
+    copy.name = (copy.name || "Package") + " Copy";
+    copy.internalName = (copy.internalName || "Package") + " Copy";
+    packages.splice(activePackageIndex + 1, 0, copy);
+    activePackageIndex++;
+    normalizeSort(packages);
+    markDirty();
+    render();
+  };
+  document.getElementById("delPackage").onclick = () => {
+    if (!packages.length) return;
+    const pkg = packages[activePackageIndex];
+    const volumeCount = (pkg.monthlyVolumes || []).length;
+    const groupCount = (pkg.optionItems || []).length;
+    const lineCount = (pkg.optionItems || []).reduce((sum, group) => sum + ((group.optionLineItems || []).length), 0);
+    const name = pkg.name || pkg.internalName || `Package ${activePackageIndex + 1}`;
+    const msg = `Delete active package: ${name}?\n\nThis package contains ${volumeCount} volume band(s), ${groupCount} option group(s), and ${lineCount} option line item(s).\n\nThis cannot be undone unless you discard changes or reload the original file.`;
+    if (!confirm(msg)) return;
+    packages.splice(activePackageIndex, 1);
+    activePackageIndex = Math.max(0, Math.min(activePackageIndex, packages.length - 1));
+    normalizeSort(packages);
+    markDirty();
+    render();
+  };
+  document.getElementById("movePkgUp").onclick = () => { if (activePackageIndex <= 0) return; [packages[activePackageIndex - 1], packages[activePackageIndex]] = [packages[activePackageIndex], packages[activePackageIndex - 1]]; activePackageIndex--; normalizeSort(packages); markDirty(); render(); };
+  document.getElementById("movePkgDown").onclick = () => { if (activePackageIndex >= packages.length - 1) return; [packages[activePackageIndex + 1], packages[activePackageIndex]] = [packages[activePackageIndex], packages[activePackageIndex + 1]]; activePackageIndex++; normalizeSort(packages); markDirty(); render(); };
+  document.getElementById("copyInternalName").onclick = () => {
+    if (!packages.length) return;
+    packages[activePackageIndex].name = packages[activePackageIndex].internalName || packages[activePackageIndex].name || "";
+    markDirty();
+    render();
+  };
+  editor.querySelectorAll("[data-pkg-tab]").forEach(t => t.onclick = () => { activePackageIndex = Number(t.dataset.pkgTab); render(); });
+  editor.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { activePackageMode = b.dataset.mode; render(); });
+  editor.querySelectorAll("[data-add-tier]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; pkg.monthlyVolumes.push(defaultMonthlyVolume(pkg.monthlyVolumes.length)); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-tier]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; pkg.monthlyVolumes.splice(Number(btn.dataset.delTier), 1); normalizeSort(pkg.monthlyVolumes); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-pkg-group]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; pkg.optionItems.push(defaultOptionGroup()); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-pkg-group]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; pkg.optionItems.splice(Number(btn.dataset.delPkgGroup), 1); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-pkg-line]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.addPkgLine)]; g.optionLineItems = g.optionLineItems || []; g.optionLineItems.push(defaultLineItem()); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-pkg-line]").forEach(btn => btn.onclick = () => { const pkg = packages[activePackageIndex]; const g = pkg.optionItems[Number(btn.dataset.groupIdx)]; g.optionLineItems.splice(Number(btn.dataset.delPkgLine), 1); markDirty(); render(); });
+}
+function renderPackageEditor(pkg, i) {
+  pkg.monthlyVolumes = pkg.monthlyVolumes || [];
+  pkg.optionItems = pkg.optionItems || [];
+  return `
+    <div class="action-row"><button class="btn ${activePackageMode === "details" ? "primary" : ""}" data-mode="details">Details</button><button class="btn ${activePackageMode === "volumes" ? "primary" : ""}" data-mode="volumes">Volume Bands</button><button class="btn ${activePackageMode === "pkgOptions" ? "primary" : ""}" data-mode="pkgOptions">Package Options</button></div>
+    ${activePackageMode === "details" ? renderPackageDetails(pkg, i) : ""}
+    ${activePackageMode === "volumes" ? renderPackageVolumes(pkg, i) : ""}
+    ${activePackageMode === "pkgOptions" ? renderPackageOptions(pkg, i) : ""}`;
+}
+function renderPackageDetails(pkg, i) {
+  return collapsibleCard("Package Details", `<div class="grid cols3">
+    ${fieldIndex(`packages.${i}.internalName`, "Internal Name", pkg.internalName)}
+    ${fieldIndex(`packages.${i}.name`, "Display Name", pkg.name)}
+    ${fieldIndex(`packages.${i}.marketingTitle`, "Marketing Title", pkg.marketingTitle)}
+    ${fieldIndex(`packages.${i}.amount`, "Amount", pkg.amount, "number")}
+    ${fieldIndex(`packages.${i}.amountDescription`, "Amount Description", pkg.amountDescription)}
+    ${fieldIndex(`packages.${i}.unit`, "Unit", pkg.unit)}
+    ${fieldIndex(`packages.${i}.isDefault`, "Is Default", pkg.isDefault, "select")}
+    ${fieldIndex(`packages.${i}.isCountable`, "Is Countable", pkg.isCountable, "select")}
+    ${fieldIndex(`packages.${i}.sortOrder`, "Sort Order", pkg.sortOrder, "number")}
+    <div class="field" style="grid-column:1/-1"><label>Tagline</label>${inputForIndex(`packages.${i}.tagline`, pkg.tagline)}</div>
+    <div class="field" style="grid-column:1/-1"><label>Short Description</label>${inputForIndex(`packages.${i}.shortDescription`, pkg.shortDescription)}</div>
+    <div class="field" style="grid-column:1/-1"><label>Long Description</label>${textareaForIndex(`packages.${i}.longDescription`, pkg.longDescription)}</div>
+    <div class="field" style="grid-column:1/-1"><label>Included Module Text</label>${textareaForIndex(`packages.${i}.includedModuleText`, pkg.includedModuleText)}</div>
+  </div>
+  <hr><div class="help">productItems and discountItems are preserved but not edited.</div>`, {open: true});
+}
+function fieldIndex(path, label, value, type = "text") {
+  if (type === "select") {
+    return `<div class="field"><label>${esc(label)}</label><select data-index-path="${esc(path)}"><option value="0" ${Number(value || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(value || 0) === 1 ? "selected" : ""}>Yes</option></select></div>`;
+  }
+  return `<div class="field"><label>${esc(label)}</label>${inputForIndex(path, value, type)}</div>`;
+}
+function renderPackageVolumes(pkg, pIdx) {
+  const table = pkg.monthlyVolumes.length ? `<div class="table-scroll"><table><thead><tr><th>Name</th><th>Min</th><th>Max</th><th>Amount</th><th>Unit Amount</th><th>Default</th><th>Sort</th><th></th></tr></thead><tbody>${pkg.monthlyVolumes.map((mv, i) => `<tr>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.internalName`, mv.internalName)}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.minimumValue`, mv.minimumValue, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.maximumValue`, mv.maximumValue, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.amount`, mv.amount, "number")}</td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.transactionUnitAmount`, mv.transactionUnitAmount, "number")}</td>
+    <td><select data-index-path="packages.${pIdx}.monthlyVolumes.${i}.isDefault"><option value="0" ${Number(mv.isDefault || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(mv.isDefault || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+    <td>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.sortOrder`, mv.sortOrder ?? i, "number")}</td>
+    <td><button class="btn red" data-del-tier="${i}">Delete</button></td>
+  </tr><tr><td colspan="8"><label>Amount Description</label>${inputForIndex(`packages.${pIdx}.monthlyVolumes.${i}.amountDescription`, mv.amountDescription)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">No monthly volume bands.</div>`;
+  return `${stickyActions(`<button class="btn green" data-add-tier="1">+ Add Volume Band</button>`)}${collapsibleCard("Monthly Volume Bands", table, {sub: `${pkg.monthlyVolumes.length} bands`, open: true})}`;
+}
+function renderPackageOptions(pkg, pIdx) {
+  const groups = pkg.optionItems.length ? pkg.optionItems.map((g, gi) => collapsibleCard(g.optionItemType || `Group ${gi + 1}`, `<div class="grid cols2">
+    ${fieldIndex(`packages.${pIdx}.optionItems.${gi}.optionItemType`, "Group Type", g.optionItemType)}
+    ${fieldIndex(`packages.${pIdx}.optionItems.${gi}.headerDescription`, "Header Description", g.headerDescription)}
+    <div style="grid-column:1/-1" class="action-row"><button class="btn green" data-add-pkg-line="${gi}">+ Add Line Item</button></div>
+    <div style="grid-column:1/-1">${renderLineItemsTable(g.optionLineItems || [], `packages.${pIdx}.optionItems.${gi}`, gi, true)}</div>
+  </div>`, {sub: `${(g.optionLineItems || []).length} line items`, open: gi === 0, headExtra: `<button class="btn red" data-del-pkg-group="${gi}">Delete Group</button>`})).join("") : `<div class="empty">No package option groups.</div>`;
+  return `${stickyActions(`<button class="btn green" data-add-pkg-group="1">+ Add Package Option Group</button>`)}${groups}`;
+}
+function renderOptions() {
+  data.optionItems = data.optionItems || [];
+  editor.innerHTML = `<div class="section-title">Top-Level Option Items <span class="sub">implementations, enrollments, addons</span></div>${stickyActions(`<button class="btn green" id="addTopGroup">+ Add Group</button>`)}${data.optionItems.length ? data.optionItems.map((g, gi) => collapsibleCard(g.optionItemType || "Group", `<div class="grid cols2">
+    ${fieldIndex(`optionItems.${gi}.optionItemType`, "Group Type", g.optionItemType)}
+    ${fieldIndex(`optionItems.${gi}.headerDescription`, "Header Description", g.headerDescription)}
+    ${fieldIndex(`optionItems.${gi}.toolTipText`, "Tooltip Text", g.toolTipText)}
+    ${fieldIndex(`optionItems.${gi}.toolTipDescription`, "Tooltip Description", g.toolTipDescription)}
+    <div style="grid-column:1/-1" class="action-row"><button class="btn green" data-add-top-line="${gi}">+ Add Line Item</button></div>
+    <div style="grid-column:1/-1">${renderLineItemsTable(g.optionLineItems || [], `optionItems.${gi}`, gi, false)}</div>
+  </div>`, {sub: `${(g.optionLineItems || []).length} line items`, open: gi === 0, headExtra: `<button class="btn red" data-del-top-group="${gi}">Delete Group</button>`})).join("") : `<div class="card"><div class="card-body empty">No top-level option items.</div></div>`}`;
+  bindIndexedInputs();
+  document.getElementById("addTopGroup").onclick = () => { data.optionItems.push(defaultOptionGroup()); markDirty(); render(); };
+  editor.querySelectorAll("[data-del-top-group]").forEach(btn => btn.onclick = () => { data.optionItems.splice(Number(btn.dataset.delTopGroup), 1); markDirty(); render(); });
+  editor.querySelectorAll("[data-add-top-line]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.addTopLine)]; g.optionLineItems = g.optionLineItems || []; g.optionLineItems.push(defaultLineItem()); markDirty(); render(); });
+  editor.querySelectorAll("[data-del-top-line]").forEach(btn => btn.onclick = () => { const g = data.optionItems[Number(btn.dataset.groupIdx)]; g.optionLineItems.splice(Number(btn.dataset.delTopLine), 1); markDirty(); render(); });
+}
+function renderLineItemsTable(items, basePath, groupIdx, isPkg) {
+  if (!items.length) return `<div class="empty">No line items.</div>`;
+  const delAttr = isPkg ? "data-del-pkg-line" : "data-del-top-line";
+  return `<div class="table-scroll"><table><thead><tr><th>Internal Name</th><th>Marketing Title</th><th>Amount</th><th>Unit</th><th>Included</th><th>Sort</th><th></th></tr></thead><tbody>${items.map((li, i) => `<tr>
+    <td>${inputForIndex(`${basePath}.optionLineItems.${i}.internalName`, li.internalName)}</td>
+    <td>${inputForIndex(`${basePath}.optionLineItems.${i}.marketingTitle`, li.marketingTitle)}</td>
+    <td>${inputForIndex(`${basePath}.optionLineItems.${i}.amount`, li.amount, "number")}</td>
+    <td>${inputForIndex(`${basePath}.optionLineItems.${i}.unit`, li.unit)}</td>
+    <td><select data-index-path="${basePath}.optionLineItems.${i}.isIncluded"><option value="0" ${Number(li.isIncluded || 0) === 0 ? "selected" : ""}>No</option><option value="1" ${Number(li.isIncluded || 0) === 1 ? "selected" : ""}>Yes</option></select></td>
+    <td>${inputForIndex(`${basePath}.optionLineItems.${i}.sortOrder`, li.sortOrder ?? i, "number")}</td>
+    <td><button class="btn red" data-group-idx="${groupIdx}" ${delAttr}="${i}">Delete</button></td>
+  </tr><tr><td colspan="7"><label>Long Description</label>${textareaForIndex(`${basePath}.optionLineItems.${i}.longDescription`, li.longDescription)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function renderCustomAttrs() {
+  data.customAttributes = data.customAttributes || [];
+  editor.innerHTML = `<div class="section-title">Custom Attributes <span class="sub">top-level key-value data</span></div>${stickyActions(`<button class="btn green" id="addAttr">+ Add Attribute</button>`)}${data.customAttributes.length ? data.customAttributes.map((a, i) => collapsibleCard(a.name || "Attribute", `<div class="grid cols2">
+    ${fieldIndex(`customAttributes.${i}.name`, "Name", a.name)}
+    ${fieldIndex(`customAttributes.${i}.description`, "Description", a.description)}
+    ${fieldIndex(`customAttributes.${i}.value`, "Value", a.value)}
+    ${fieldIndex(`customAttributes.${i}.displayFor`, "Display For", a.displayFor, "number")}
+    ${fieldIndex(`customAttributes.${i}.sortOrder`, "Sort Order", a.sortOrder, "number")}
+  </div>`, {open: i === 0, headExtra: `<button class="btn red" data-del-attr="${i}">Delete</button>`})).join("") : `<div class="card"><div class="card-body empty">No custom attributes.</div></div>`}`;
+  bindIndexedInputs();
+  document.getElementById("addAttr").onclick = () => { data.customAttributes.push({name: "", description: "", value: "", isRequired: 0, displayFor: 0, sortOrder: data.customAttributes.length}); markDirty(); render(); };
+  editor.querySelectorAll("[data-del-attr]").forEach(btn => btn.onclick = () => { data.customAttributes.splice(Number(btn.dataset.delAttr), 1); markDirty(); render(); });
+}
+function renderSaveExport() {
+  const pathLooksComplete = Boolean(currentFilePath && currentFilePath.toLowerCase().endsWith(".json") && currentFilePath.includes("\\"));
+  const validationText = !validationRan ? "Not run" : validationErrors.length ? `${validationErrors.length} issue(s)` : "Passed";
+  editor.innerHTML = `
+    <div class="section-title">Save / Export <span class="sub">backend save copy or browser download</span></div>
+    <div class="card"><div class="card-head"><div class="card-title">Current Status</div></div><div class="card-body grid cols2">
+      <div><label>Loaded File</label><div class="preview-card">${esc(currentFileName)}</div></div>
+      <div><label>Unsaved Changes</label><div class="preview-card">${dirty ? "Yes" : "No"}</div></div>
+      <div><label>Validation</label><div class="preview-card">${esc(validationText)}</div></div>
+      <div><label>Last Save / Download</label><div class="preview-card">${esc(lastSaveMessage)}</div></div>
+    </div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Save Copy Through Backend</div><span class="badge">recommended for project folder</span></div><div class="card-body">
+      <div class="field"><label>Source JSON full path</label><input id="savePathInput" value="${esc(currentFilePath)}" placeholder="Example: C:\\Dell Inspirion\\JSON Editor\\Sample JSONs\\item_mn__08092024.json" /></div>
+      <div class="help">The backend saves a new timestamped copy in this same folder. Chrome only gives the file name, so paste the full source path once.</div>
+      ${pathLooksComplete ? `<div class="okbox">Path looks ready for backend save.</div>` : `<div class="warnbox">Path is incomplete. Paste the full Windows path before using Save Copy.</div>`}
+      <div class="action-row"><button class="btn primary" id="saveCopyPageBtn">Save Copy</button><button class="btn green" id="validateBeforeSaveBtn">Validate First</button></div>
+    </div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Browser Download</div><span class="badge">fallback</span></div><div class="card-body">
+      <p class="help">This downloads a versioned JSON file to your browser Downloads folder. Use it when you do not want to enter a full path.</p>
+      <button class="btn" id="downloadPageBtn">Download JSON</button>
+    </div></div>`;
+  const pathInput = document.getElementById("savePathInput");
+  pathInput.addEventListener("input", e => { currentFilePath = e.target.value; updateShell(); });
+  document.getElementById("saveCopyPageBtn").onclick = saveVersion;
+  document.getElementById("validateBeforeSaveBtn").onclick = validateData;
+  document.getElementById("downloadPageBtn").onclick = downloadJson;
+}
+
+function renderValidation() {
+  const hasRun = validationRan;
+  const body = !hasRun
+    ? `<div class="card"><div class="card-body empty">Validation has not run for the current edit.</div></div>`
+    : validationErrors.length
+      ? `<div class="warnbox">${validationErrors.length} issue(s) found.</div><div class="card"><div class="card-body">${validationErrors.map(e => `<div style="margin-bottom:8px">• ${esc(e)}</div>`).join("")}</div></div>`
+      : `<div class="okbox">Validation passed.</div>`;
+  editor.innerHTML = `<div class="section-title">Validation <span class="sub">backend /validate results</span></div><div class="action-row"><button class="btn green" id="runValidation">Run Validation</button></div>${body}`;
+  document.getElementById("runValidation").onclick = validateData;
+}
+function shouldSkipDiffPath(path) {
+  return path.split(".").some(part => part === "discountItems");
+}
+function flattenForDiff(value, prefix = "", out = {}) {
+  if (shouldSkipDiffPath(prefix)) return out;
+  if (value === null || typeof value !== "object") {
+    out[prefix || "root"] = value;
+    return out;
+  }
+  if (Array.isArray(value)) {
+    if (!value.length) out[prefix || "root"] = [];
+    value.forEach((item, idx) => flattenForDiff(item, prefix ? `${prefix}.${idx}` : String(idx), out));
+    return out;
+  }
+  const keys = Object.keys(value);
+  if (!keys.length) out[prefix || "root"] = {};
+  keys.forEach(key => flattenForDiff(value[key], prefix ? `${prefix}.${key}` : key, out));
+  return out;
+}
+function compactValue(value) {
+  const raw = typeof value === "string" ? value : JSON.stringify(value);
+  const text = raw === undefined ? "" : String(raw);
+  return text.length > 500 ? text.slice(0, 500) + "…" : text;
+}
+function buildDiffRows(filterText = "") {
+  if (!originalData || !data) return [];
+  const before = flattenForDiff(originalData);
+  const after = flattenForDiff(data);
+  const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
+  const needle = filterText.trim().toLowerCase();
+  return keys
+    .filter(key => JSON.stringify(before[key]) !== JSON.stringify(after[key]))
+    .filter(key => !needle || key.toLowerCase().includes(needle) || compactValue(before[key]).toLowerCase().includes(needle) || compactValue(after[key]).toLowerCase().includes(needle))
+    .map(key => ({ key, before: before[key], after: after[key], type: !(key in before) ? "added" : !(key in after) ? "removed" : "changed" }));
+}
+function renderCompare() {
+  const query = sessionStorage.getItem("compareFilter") || "";
+  const rows = buildDiffRows(query);
+  editor.innerHTML = `<div class="section-title">Compare Versions <span class="sub">original vs current, discountItems hidden</span></div>
+    <div class="search-row"><input id="compareSearch" value="${esc(query)}" placeholder="Filter by path or value" /><button class="btn" id="clearCompareSearch">Clear</button></div>
+    ${rows.length ? `<div class="help" style="margin-bottom:10px">${rows.length} changed field(s).</div><div class="diff-grid">${rows.map(row => `<div class="diff-row"><div class="diff-head"><span class="diff-${row.type}">${esc(row.type.toUpperCase())}</span><span>${esc(row.key)}</span></div><div class="diff-body"><div class="diff-cell"><div class="diff-label">Original</div><div class="diff-value">${esc(compactValue(row.before))}</div></div><div class="diff-cell"><div class="diff-label">Current</div><div class="diff-value">${esc(compactValue(row.after))}</div></div></div></div>`).join("")}</div>` : `<div class="okbox">No differences found against the opened file.</div>`}`;
+  document.getElementById("compareSearch").addEventListener("input", e => { sessionStorage.setItem("compareFilter", e.target.value); renderCompare(); });
+  document.getElementById("clearCompareSearch").onclick = () => { sessionStorage.removeItem("compareFilter"); renderCompare(); };
+}
+function renderRawJson() {
+  const rawEditor = `<textarea id="rawJson" class="raw-json">${esc(JSON.stringify(data, null, 2))}</textarea>`;
+  editor.innerHTML = `<div class="section-title">Raw JSON <span class="sub">advanced editor</span></div>${stickyActions(`<button class="btn green" id="applyRaw">Apply Raw JSON</button><button class="btn" id="resetRaw">Reset</button><button class="btn blue" id="copyRawJson">Copy JSON</button>`)}${collapsibleCard("Raw JSON Editor", rawEditor, {sub: "editable", open: true, bodyClass: "raw-json-wrap"})}`;
+  document.getElementById("applyRaw").onclick = () => {
+    try {
+      data = JSON.parse(document.getElementById("rawJson").value);
+      markDirty(); render();
+    } catch (err) { alert("Raw JSON is invalid: " + err.message); }
+  };
+  document.getElementById("resetRaw").onclick = () => renderRawJson();
+  document.getElementById("copyRawJson").onclick = () => copyCurrentJson();
+}
+
+function renderPreview() {
+  if (!data) { previewBody.innerHTML = `<div class="empty">No JSON loaded.</div>`; return; }
+  if (currentPreview === "json") {
+    previewBody.innerHTML = `<pre class="code">${esc(JSON.stringify(data, null, 2))}</pre>`;
+    return;
+  }
+  const packages = data.packages || [];
+  let html = `<div class="pp-head">Product</div><div class="preview-card"><div class="pp-title">${esc(data.name || "Unnamed product")}</div><div class="pp-desc">${esc(truncate(data.headerDescription || data.description || "", 180))}</div></div>`;
+  html += `<div class="pp-head">Packages</div>`;
+  html += packages.length ? packages.map(p => `<div class="preview-card"><div class="pp-title">${esc(p.name || p.internalName || "Package")}</div><div class="pp-desc">${esc(truncate(p.tagline || p.marketingTitle || p.shortDescription || "", 120))}</div><div class="pp-price">${esc(money(p.amount))}${p.unit ? `<span style="color:var(--text2);font-size:11px">/${esc(p.unit)}</span>` : ""}</div><div class="help">${(p.monthlyVolumes || []).length} volume band(s), ${(p.optionItems || []).length} option group(s)</div></div>`).join("") : `<div class="empty">No packages.</div>`;
+  const terms = data.contractTerms?.contractInitialTerm || [];
+  if (terms.length) html += `<div class="pp-head">Contract Terms</div><div class="preview-card">${terms.map(t => `<span class="badge" style="margin-right:6px">${esc((t.termValue ?? "") + " " + (t.termUnit ?? ""))}${Number(t.isDefault || 0) === 1 ? " default" : ""}</span>`).join("")}</div>`;
+  const groups = data.optionItems || [];
+  if (groups.length) html += `<div class="pp-head">Option Items</div>${groups.map(g => `<div class="preview-card"><div class="pp-title">${esc(g.optionItemType || "Group")}</div><div class="pp-desc">${(g.optionLineItems || []).length} line item(s)</div></div>`).join("")}`;
+  previewBody.innerHTML = html;
+}
+
+function updateShell() {
+  const pkgCount = data?.packages?.length || 0;
+  document.getElementById("fileName").textContent = currentFileName;
+  document.getElementById("dirtyDot").className = dirty ? "dot dirty" : "dot";
+  document.getElementById("pkgBadge").textContent = pkgCount;
+  document.getElementById("statusFile").textContent = "file: " + currentFileName;
+  document.getElementById("statusDirty").textContent = dirty ? "unsaved" : "saved";
+  document.getElementById("statusPath").textContent = "path: " + (currentFilePath || "blank");
+  const pill = document.getElementById("validationPill");
+  if (!data) {
+    pill.textContent = "No file loaded";
+    pill.className = "validation-pill warn";
+    document.getElementById("statusValidation").textContent = "validation: not run";
+  } else if (validationErrors.length) {
+    pill.textContent = validationErrors.length + " validation issue(s)";
+    pill.className = "validation-pill warn";
+    document.getElementById("statusValidation").textContent = "validation: " + validationErrors.length + " issue(s)";
+  } else {
+    pill.textContent = "Ready";
+    pill.className = "validation-pill";
+    document.getElementById("statusValidation").textContent = "validation: ready";
+  }
+}
+function normalizeSort(arr) { arr.forEach((x, i) => { if (x && typeof x === "object") x.sortOrder = i; }); }
+function defaultContractTerm(sortOrder) { return {termValue: 1, termUnit: "Y", description: "", isDefault: 0, sortOrder, discountItems: []}; }
+function defaultMonthlyVolume(sortOrder) { return {internalName: "New Monthly Volume", minimumValue: 1, maximumValue: 1000, amount: 0, amountDescription: "", transactionUnitAmount: 0, unit: "month", subCount: 0, subUnitType: "transactions", subUnit: "month", subUnitDescription: "", isDefault: 0, sortOrder, termAmounts: [], discountItems: []}; }
+function defaultOptionGroup() { return {optionItemType: "New Group", headerDescription: "", toolTipText: "", toolTipDescription: "", headerDescription2: "", toolTipText2: "", toolTipDescription2: "", customAttributes: [], discountItems: [], optionLineItems: []}; }
+function defaultLineItem() { return {catalogCode: "", internalName: "New Option", marketingTitle: "", tagline: "", toolTipDescription: "", shortDescription: "", longDescription: "", amount: 0, amountDescription: "", useTransactionUnitAmount: 0, unit: "", subCount: 0, subUnitType: "", subUnit: "", subUnitDescription: "", isIncluded: 0, isDefault: 0, isCountable: 0, countableMin: 0, countableMax: 0, sortOrder: 0, customAttributes: [], discountItems: [], termAmounts: []}; }
+function defaultPackage() { return {internalName: "New Package", name: "New Package", marketingTitle: "", tagline: "", toolTipDescription: "", shortDescription: "", longDescription: "", amount: 0, amountDescription: "", unit: "month", subCount: 0, subUnitType: "", subUnit: "", subUnitDescription: "", isDefault: 0, isCountable: 0, countableMin: 0, countableMax: 0, sortOrder: 0, includedModuleText: "", customAttributes: [], productItems: [], monthlyVolumes: [], discountItems: [], optionItems: []}; }
+
+async function openFile() {
+  if (window.showOpenFilePicker) {
+    try {
+      const [handle] = await window.showOpenFilePicker({types: [{description: "JSON", accept: {"application/json": [".json"]}}]});
+      browserFileHandle = handle;
+      const file = await handle.getFile();
+      const text = await file.text();
+      loadJson(text, file.name);
+      return;
+    } catch (err) {
+      if (err.name === "AbortError") return;
+    }
+  }
+  fileInput.click();
+}
+function loadJson(text, name) {
+  try {
+    data = JSON.parse(text);
+    originalData = clone(data);
+    currentFileName = name || "loaded.json";
+    currentFilePath = currentFilePath || currentFileName;
+    dirty = false;
+    validationErrors = [];
+    validationRan = false;
+    activePackageIndex = 0;
+    render();
+  } catch (err) {
+    alert("Could not parse JSON: " + err.message);
+  }
+}
+async function validateData() {
+  if (!data) return alert("Open a JSON file first.");
+  try {
+    const res = await fetch("/validate", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({data})});
+    const json = await res.json();
+    validationErrors = json.errors || [];
+    validationRan = true;
+    updateShell();
+    if (currentSection === "validation") renderValidation();
+    alert(json.valid ? "Validation passed." : `Validation found ${validationErrors.length} issue(s).`);
+  } catch (err) {
+    alert("Validation request failed: " + err.message);
+  }
+}
+function shouldWarnBeforeSave() {
+  if (!validationRan) return confirm("Validation has not been run for the latest edits. Save anyway?");
+  if (validationErrors.length) return confirm(`Validation has ${validationErrors.length} issue(s). Save anyway?`);
+  return true;
+}
+async function saveVersion() {
+  if (!data) return alert("Open a JSON file first.");
+  if (!shouldWarnBeforeSave()) return;
+  if (!currentFilePath || currentFilePath === currentFileName || !currentFilePath.toLowerCase().endsWith(".json")) {
+    currentFilePath = prompt("Enter the full source JSON path. The backend will save a versioned copy in the same folder:", currentFilePath || currentFileName) || "";
+    if (!currentFilePath) return;
+  }
+  try {
+    const res = await fetch("/save", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({path: currentFilePath, data})});
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Save failed");
+    lastSaveMessage = `Saved backend copy: ${json.saved_as}`;
+    markSaved(true);
+    if (currentSection === "save") renderSaveExport();
+    alert("Saved as " + json.saved_as);
+  } catch (err) {
+    lastSaveMessage = "Backend save failed: " + err.message;
+    updateShell();
+    if (currentSection === "save") renderSaveExport();
+    alert("Save failed: " + err.message);
+  }
+}
+function downloadJson() {
+  if (!data) return alert("Open a JSON file first.");
+  if (!shouldWarnBeforeSave()) return;
+  const base = (currentFileName || "pricing.json").replace(/\.json$/i, "");
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15).replace("T", "_");
+  const name = `${base}_v2_0_1_${stamp}.json`;
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  lastSaveMessage = `Downloaded browser copy: ${name}`;
+  markSaved(true);
+  if (currentSection === "save") renderSaveExport();
+}
+function discardChanges() {
+  if (!originalData) return;
+  if (dirty && !confirm("Discard unsaved changes?")) return;
+  data = clone(originalData);
+  dirty = false;
+  validationErrors = [];
+  validationRan = false;
+  render();
+}
+
+fileInput.addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  browserFileHandle = null;
+  loadJson(text, file.name);
+});
+document.getElementById("openBtn").onclick = openFile;
+document.getElementById("discardBtn").onclick = discardChanges;
+document.getElementById("validateBtn").onclick = validateData;
+document.getElementById("saveBtn").onclick = saveVersion;
+document.getElementById("downloadBtn").onclick = downloadJson;
+document.querySelectorAll(".nav-item[data-section]").forEach(item => item.onclick = () => {
+  document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
+  item.classList.add("active");
+  currentSection = item.dataset.section;
+  render();
+});
+document.querySelectorAll(".preview-tab").forEach(tab => tab.onclick = () => {
+  document.querySelectorAll(".preview-tab").forEach(x => x.classList.remove("active"));
+  tab.classList.add("active");
+  currentPreview = tab.dataset.preview;
+  renderPreview();
+});
+
+setupPanelResizing();
+ensureLoaded();
+updateShell();
+</script>
+</body>
+</html>

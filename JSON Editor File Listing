@@ -1,0 +1,40 @@
+ Volume in drive C is OS
+ Volume Serial Number is D40E-DE3D
+
+ Directory of C:\Dell Inspirion\JSON Editor
+
+06/09/2026  12:54 PM    <DIR>          .
+03/19/2026  05:43 PM    <DIR>          ..
+06/09/2026  12:54 PM               209 'JSON
+05/10/2026  07:07 PM            28,588 handoff_v2_0_17_preview.md
+05/10/2026  07:11 PM            28,588 handoff_v2_0_17_preview_1.md
+05/10/2026  09:23 PM             4,824 handoff_v2_0_21_patch.md
+05/10/2026  09:53 PM             7,263 handoff_v2_0_22_newfile.md
+05/10/2026  10:19 PM            12,088 handoff_v2_0_22_new_modal.md
+05/11/2026  08:59 AM            11,773 handoff_v2_0_23_template_hardening.md
+05/11/2026  01:25 PM            12,006 handoff_v2_0_27_release_packaging.md
+05/12/2026  08:01 AM            14,403 handoff_v2_0_28_complete.md
+05/11/2026  10:33 PM            13,208 handoff_v2_0_28_full.md
+05/11/2026  10:20 PM             9,073 handoff_v2_0_28_preview_fixes.md
+05/12/2026  08:11 AM           164,198 index.html
+05/10/2026  09:38 PM           142,517 index_v2_0_21.html
+05/10/2026  09:44 PM           142,517 index_v2_0_21_fixed.html
+05/10/2026  09:56 PM           144,756 index_v2_0_22.html
+05/10/2026  08:32 AM            68,657 index_v2_0_4.html
+05/10/2026  08:27 AM            68,657 index_v2_0_5.html
+05/09/2026  10:42 PM            26,215 item_mn__NEW_v2_0_0_20260509_224249.json
+06/09/2026  12:54 PM               209 JSON
+06/09/2026  12:54 PM                 0 JSON Editor File Listing
+05/10/2026  05:59 PM            24,728 main.py
+05/09/2026  09:45 PM            16,241 main_v1.py
+05/09/2026  05:36 PM             8,992 PricingEditor_ProjectContext_1.md
+05/11/2026  01:19 PM             5,725 PricingEditor_v2_0_26_Claude_Handoff.md
+05/09/2026  05:37 PM            26,628 pricing_editor_mockup.html
+05/09/2026  05:58 PM            49,041 pricing_editor_refactored 2.0.html
+05/11/2026  12:58 PM             3,604 RealTime_COB_v2_0_16_20260511_125833.json
+05/11/2026  01:18 PM    <DIR>          Sample JSONs
+05/09/2026  09:31 PM            10,937 session1_handoff_mainpy.md
+05/09/2026  09:46 PM    <DIR>          Streamlit
+05/10/2026  06:01 PM    <DIR>          __pycache__
+              28 File(s)      1,045,645 bytes
+               5 Dir(s)  585,217,380,352 bytes free

@@ -1,0 +1,133 @@
+{
+  "name": "RealTime COB",
+  "description": "RealTime Coordination of benefits",
+  "slug": "COB",
+  "catalogCode": "",
+  "viewTemplate": "API-Tiered-Public",
+  "maxQuantity": 1,
+  "headerDescription": "",
+  "tooltipText": "",
+  "tooltipDescription": "",
+  "paymentSchedule": "",
+  "emailAddress": "",
+  "emailSubject": "",
+  "emailBody": "",
+  "contractTerms": {},
+  "packages": [
+    {
+      "internalName": "RealTime COB",
+      "name": "RealTime COB",
+      "marketingTitle": "",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 0,
+      "amountDescription": "Starting at $0.00",
+      "unit": "month",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 1,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 0,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [],
+      "monthlyVolumes": [
+        {
+          "internalName": "New Monthly Volume",
+          "minimumValue": 1,
+          "maximumValue": 1000,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0,
+          "unit": "month",
+          "subCount": 0,
+          "subUnitType": "transactions",
+          "subUnit": "month",
+          "subUnitDescription": "",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "termAmounts": [],
+          "discountItems": []
+        }
+      ],
+      "discountItems": [],
+      "optionItems": []
+    }
+  ],
+  "optionItems": [
+    {
+      "optionItemType": "Implementations",
+      "headerDescription": "",
+      "toolTipText": "",
+      "toolTipDescription": "",
+      "headerDescription2": "",
+      "toolTipText2": "",
+      "toolTipDescription2": "",
+      "customAttributes": [],
+      "discountItems": [],
+      "optionLineItems": [
+        {
+          "catalogCode": "",
+          "internalName": "Implementation Fee",
+          "marketingTitle": "",
+          "tagline": "",
+          "toolTipDescription": "",
+          "shortDescription": "",
+          "longDescription": "",
+          "amount": 0,
+          "amountDescription": "",
+          "useTransactionUnitAmount": 0,
+          "unit": "one-time fee",
+          "subCount": 0,
+          "subUnitType": "",
+          "subUnit": "",
+          "subUnitDescription": "",
+          "isIncluded": 0,
+          "isDefault": 0,
+          "isCountable": 0,
+          "countableMin": 0,
+          "countableMax": 0,
+          "sortOrder": 0,
+          "customAttributes": [],
+          "discountItems": [],
+          "termAmounts": []
+        }
+      ]
+    },
+    {
+      "optionItemType": "Addons",
+      "headerDescription": "",
+      "toolTipText": "",
+      "toolTipDescription": "",
+      "headerDescription2": "",
+      "toolTipText2": "",
+      "toolTipDescription2": "",
+      "customAttributes": [],
+      "discountItems": [],
+      "optionLineItems": []
+    }
+  ],
+  "customAttributes": [
+    {
+      "name": "packageMonthlySummaryDiscountToolTip",
+      "value": "",
+      "description": "Tooltip shown on the pricing page for package monthly summary discount",
+      "displayFor": 1,
+      "sortOrder": 0
+    },
+    {
+      "name": "implementationSummaryDiscountToolTip",
+      "value": "",
+      "description": "Tooltip shown when implementation fee is waived for multiple APIs",
+      "displayFor": 1,
+      "sortOrder": 1
+    }
+  ],
+  "discountItems": []
+}

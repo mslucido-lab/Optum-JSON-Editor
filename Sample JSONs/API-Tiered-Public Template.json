@@ -1,0 +1,234 @@
+{
+  "name": "",
+  "description": "",
+  "slug": "",
+  "maxQuantity": 0,
+  "catalogCode": "",
+  "viewTemplate": "API-Tiered-Public",
+  "imageName": "",
+  "headerDescription": "",
+  "toolTipText": "",
+  "toolTipDescription": "",
+  "paymentSchedule": "",
+  "itemContact": {
+    "email": "",
+    "emailSubject": "",
+    "emailContent": ""
+  },
+  "customAttributes": [
+    {
+      "name": "",
+      "description": "",
+      "value": "",
+      "isRequired": true,
+      "displayFor": 1,
+      "sortOrder": 0
+    }
+  ],
+  "discountItems": [],
+  "contractTerms": {},
+  "packages": [
+    {
+      "internalName": "",
+      "name": "",
+      "marketingTitle": "",
+      "tagline": "",
+      "toolTipDescription": "",
+      "shortDescription": "",
+      "longDescription": "",
+      "amount": 0,
+      "amountDescription": "",
+      "unit": "",
+      "subCount": 0,
+      "subUnitType": "",
+      "subUnit": "",
+      "subUnitDescription": "",
+      "isDefault": 0,
+      "isCountable": 0,
+      "countableMin": 0,
+      "countableMax": 0,
+      "sortOrder": 0,
+      "includedModuleText": "",
+      "customAttributes": [],
+      "productItems": [
+        {
+          "catalogCode": "",
+          "sortOrder": 0,
+          "isDisplay": 1
+        }
+      ],
+      "monthlyVolumes": [
+        {
+          "internalName": "",
+          "minimumValue": 0,
+          "maximumValue": 0,
+          "amount": 0,
+          "amountDescription": "",
+          "transactionUnitAmount": 0,
+          "unit": "",
+          "subCount": 0,
+          "subUnitType": "",
+          "subUnit": "",
+          "subUnitDescription": "",
+          "isDefault": 0,
+          "sortOrder": 0,
+          "discountItems": []
+        }
+      ],
+      "discountItems": [
+        {
+          "ruleName": "",
+          "description": "",
+          "customRules": "",
+          "discounts": [
+            {
+              "dollarOff": 0,
+              "percentageOff": 0,
+              "thresholdAmount": 0,
+              "validFrom": "",
+              "validTo": ""
+            }
+          ]
+        }
+      ],
+      "optionItems": [
+        {
+          "optionItemType": "Addons",
+          "headerDescription": "",
+          "toolTipText": "",
+          "toolTipDescription": "",
+          "headerDescription2": "",
+          "toolTipText2": "",
+          "toolTipDescription2": "",
+          "customAttributes": [],
+          "discountItems": [],
+          "optionLineItems": [
+            {
+              "catalogCode": "",
+              "internalName": "",
+              "marketingTitle": "",
+              "tagline": "",
+              "toolTipDescription": "",
+              "shortDescription": "",
+              "longDescription": "",
+              "amount": 0,
+              "amountDescription": "",
+              "useTransactionUnitAmount": 0,
+              "unit": "",
+              "subCount": 0,
+              "subUnitType": "",
+              "subUnit": "",
+              "subUnitDescription": "",
+              "isIncluded": 1,
+              "isDefault": 0,
+              "isCountable": 0,
+              "countableMin": 0,
+              "countableMax": 0,
+              "sortOrder": 0,
+              "customAttributes": [],
+              "discountItems": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "optionItems": [
+    {
+      "optionItemType": "Implementations",
+      "headerDescription": "",
+      "toolTipText": "",
+      "toolTipDescription": "",
+      "headerDescription2": "",
+      "toolTipText2": "",
+      "toolTipDescription2": "",
+      "customAttributes": [],
+      "discountItems": [],
+      "optionLineItems": [
+        {
+          "catalogCode": "",
+          "internalName": "",
+          "marketingTitle": "",
+          "tagline": "",
+          "toolTipDescription": "",
+          "shortDescription": "",
+          "longDescription": "",
+          "amount": 0,
+          "amountDescription": "",
+          "useTransactionUnitAmount": 0,
+          "unit": "",
+          "subCount": 0,
+          "subUnitType": "",
+          "subUnit": "",
+          "subUnitDescription": "",
+          "isIncluded": 1,
+          "isDefault": 0,
+          "isCountable": 0,
+          "countableMin": 0,
+          "countableMax": 0,
+          "sortOrder": 0,
+          "customAttributes": [],
+          "discountItems": [
+            {
+              "ruleName": "",
+              "description": "",
+              "customRules": "",
+              "discounts": [
+                {
+                  "dollarOff": 0,
+                  "percentageOff": 0,
+                  "thresholdAmount": 0,
+                  "validFrom": "",
+                  "validTo": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "optionItemType": "Addons",
+      "headerDescription": "",
+      "toolTipText": "",
+      "toolTipDescription": "",
+      "headerDescription2": "",
+      "toolTipText2": "",
+      "toolTipDescription2": "",
+      "customAttributes": [],
+      "discountItems": [],
+      "optionLineItems": [
+        {
+          "catalogCode": "",
+          "internalName": "",
+          "marketingTitle": "",
+          "tagline": "",
+          "toolTipDescription": "",
+          "shortDescription": "",
+          "longDescription": "",
+          "amount": 0,
+          "amountDescription": "",
+          "useTransactionUnitAmount": 0,
+          "unit": "",
+          "subCount": 0,
+          "subUnitType": "",
+          "subUnit": "",
+          "subUnitDescription": "",
+          "isIncluded": 1,
+          "isDefault": 0,
+          "isCountable": 0,
+          "countableMin": 0,
+          "countableMax": 0,
+          "sortOrder": 0,
+          "customAttributes": [],
+          "discountItems": [],
+          "eligiblePackages": [
+            {
+              "internalName": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
