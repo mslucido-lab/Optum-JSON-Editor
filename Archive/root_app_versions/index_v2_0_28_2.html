@@ -1,10 +1,4 @@
 <!--
-v2.0.29
-- Added auto-detected Predefined Quote multi-item schema support while preserving legacy item mode
-- Added quote-item switching, default selection, fresh add, duplicate, reorder, and guarded delete
-- Added envelope/per-item metadata editing and whole-document copy, raw, compare, save, and download
-- Added envelope validation and a Predefined Quote option to the New File modal
-
 v2.0.28.2
 - Version bump for isSummableAmount robustness fix
 - isPkgSummable now reads custom attribute names case-insensitively and supports alternate value keys
@@ -112,7 +106,7 @@ v2.0.17
 -->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pricing Editor v2.0.29</title>
+<title>Pricing Editor v2.0.28.2</title>
 <style>
 :root {
   --bg: #0d1117;
@@ -791,17 +785,6 @@ body.preview-mode .preview-body { padding: 0; }
   color: #f0f4ff;
 }
 
-/* v2.0.29 */
-.quote-item-bar {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 12px;
-  background: #1b2130; border-bottom: 1px solid #2a3040; font-size: 11px; color: #8fa3bb;
-}
-.quote-item-bar.hidden { display: none; }
-.quote-item-bar .qi-label { font-weight: 700; color: #f0f4ff; text-transform: uppercase; letter-spacing: .04em; }
-.quote-item-bar select { background: #252b38; color: #f0f4ff; border: 1px solid #3a4255; border-radius: 4px; padding: 3px 6px; font-size: 11px; }
-.quote-item-bar .btn.qi-btn { padding: 3px 8px; font-size: 11px; }
-.quote-item-bar .qi-spacer { flex: 1; }
-
 </style>
 </head>
 <body>
@@ -823,8 +806,6 @@ body.preview-mode .preview-body { padding: 0; }
     <div class="spacer"></div>
     <div id="validationPill" class="validation-pill">No validation yet</div>
   </div>
-
-  <div id="quoteItemBar" class="quote-item-bar hidden"></div>
 
   <div class="main">
     <nav id="leftNav" class="nav">
@@ -876,7 +857,6 @@ body.preview-mode .preview-body { padding: 0; }
       <select id="newFileTemplateSelect" class="modal-select">
         <option value="API-Tiered-Public">API-Tiered-Public — e.g. Medical Network APIs</option>
         <option value="Software-MonthlyVolume-Public">Software-MonthlyVolume-Public — e.g. Revenue Performance Advisor</option>
-        <option value="Predefined-Quote">Predefined-Quote — multi-item quote (Monthly Minimum / Based on Usage)</option>
       </select>
     </div>
     <div class="modal-desc" id="newFileTemplateDesc"></div>
@@ -888,13 +868,10 @@ body.preview-mode .preview-body { padding: 0; }
 </div>
 
 <script>
-const APP_VERSION = "v2.0.29";
-const APP_VERSION_JS = "v2_0_29";
+const APP_VERSION = "v2.0.28.2";
+const APP_VERSION_JS = "v2_0_28_2";
 let originalData = null;
 let data = null;
-let fileRoot = null;
-let docMode = "legacyItem";
-let activeQuoteItemIndex = 0;
 let currentSection = "metadata";
 let currentPreview = "pricing";
 let currentFileName = "No file loaded";
@@ -1036,39 +1013,6 @@ function setupPanelResizing() {
 
 
 function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
-function detectDocMode(obj) {
-  return obj && typeof obj === "object" && !Array.isArray(obj)
-    && Array.isArray(obj.quoteItems)
-    && obj.quoteItems.some(q => q && typeof q === "object" && q.item && typeof q.item === "object")
-    ? "predefinedQuote" : "legacyItem";
-}
-function normalizeQuoteItems(root) {
-  if (!Array.isArray(root.quoteItems)) root.quoteItems = [];
-  root.quoteItems = root.quoteItems.filter(q => q && typeof q === "object" && q.item && typeof q.item === "object");
-  root.quoteItems.forEach((q, i) => {
-    if (typeof q.subViewTemplate !== "string") q.subViewTemplate = "";
-    q.sortOrder = Number.isFinite(q.sortOrder) ? q.sortOrder : i;
-  });
-  root.quoteItems.sort((a, b) => a.sortOrder - b.sortOrder);
-  root.quoteItems.forEach((q, i) => { q.sortOrder = i; });
-}
-function defaultQuoteItemIndex(root) {
-  const i = (root.quoteItems || []).findIndex(q => q.isDefault === 1);
-  return i >= 0 ? i : 0;
-}
-function activeQuoteEntry() {
-  return docMode === "predefinedQuote" ? (fileRoot.quoteItems[activeQuoteItemIndex] || null) : null;
-}
-function setActiveQuoteItem(idx) {
-  if (docMode !== "predefinedQuote") { data = fileRoot; return; }
-  activeQuoteItemIndex = clampNumber(idx, 0, fileRoot.quoteItems.length - 1);
-  data = fileRoot.quoteItems[activeQuoteItemIndex].item;
-  activePackageIndex = 0;
-  activePackageMode = "details";
-  previewCheckedPackages.clear();
-  previewAddonsOpen = false;
-}
-function serializeDocument() { return docMode === "predefinedQuote" ? fileRoot : data; }
 function esc(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -1103,7 +1047,7 @@ function jsonParseDetails(text, err) {
   return {message, line: lines.length, column: lines[lines.length - 1].length + 1, position};
 }
 function rawDiffersFromEdited(rawText) {
-  return rawText !== JSON.stringify(serializeDocument(), null, 2);
+  return rawText !== JSON.stringify(data, null, 2);
 }
 function safeHtmlPreview(value) {
   const cleaned = cleanText(value);
@@ -1143,12 +1087,11 @@ function markDirty() {
 }
 function markSaved(updateBaseline = true) {
   dirty = false;
-  if (updateBaseline && fileRoot) originalData = clone(fileRoot);
+  if (updateBaseline && data) originalData = clone(data);
   updateShell();
 }
 function ensureLoaded() {
   if (data) return true;
-  document.getElementById("quoteItemBar")?.classList.add("hidden");
   editor.innerHTML = `<div class="section-title">Open a JSON file <span class="sub">${APP_VERSION} frontend</span></div><div class="card"><div class="card-body"><p>Select Open JSON to load a pricing file.</p><p class="help">After loading, edit fields in the left sections and validate before saving.</p></div></div>`;
   previewBody.innerHTML = `<div class="empty">No JSON loaded.</div>`;
   return false;
@@ -1166,15 +1109,6 @@ function field(path, label, type = "text", opts = {}) {
     return `<div class="field"><label>${esc(label)}</label><select data-path="${esc(path)}">${options.map(o => `<option value="${esc(o.value)}" ${String(value) === String(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select></div>`;
   }
   return `<div class="field"><label>${esc(label)}</label><input type="${esc(type)}" value="${esc(value)}" data-path="${esc(path)}" /></div>`;
-}
-function envField(key, label, type = "text") {
-  const v = fileRoot?.[key] ?? "";
-  if (type === "textarea") return `<div class="field"><label>${esc(label)}</label><textarea rows="3" data-env-key="${esc(key)}">${esc(v)}</textarea></div>`;
-  return `<div class="field"><label>${esc(label)}</label><input type="${esc(type)}" value="${esc(v)}" data-env-key="${esc(key)}" /></div>`;
-}
-function quoteEntryField(key, label, type = "text") {
-  const v = activeQuoteEntry()?.[key] ?? "";
-  return `<div class="field"><label>${esc(label)}</label><input type="${esc(type)}" value="${esc(v)}" data-qentry-key="${esc(key)}" /></div>`;
 }
 function bindPathInputs(root = editor) {
   root.querySelectorAll("[data-path]").forEach(el => {
@@ -1250,7 +1184,7 @@ function stickyActions(html) {
 }
 function copyCurrentJson() {
   if (!data) return;
-  navigator.clipboard.writeText(JSON.stringify(serializeDocument(), null, 2))
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2))
     .then(() => { lastSaveMessage = "Current JSON copied to clipboard."; updateShell(); })
     .catch(() => alert("Unable to copy JSON to clipboard."));
 }
@@ -1331,17 +1265,6 @@ function renderMetadata() {
     <details id="metadataPanel" class="section-panel"${panelOpen}>
       ${metadataPanelHead()}
       <div class="section-panel-body">
-        ${docMode === "predefinedQuote" ? collapsibleCard("Predefined Quote — envelope", `
-          <div class="grid cols2">
-            ${envField("name", "Quote Name")}${envField("catalogCode", "Quote Catalog Code")}
-            ${envField("description", "Quote Description")}${envField("type", "Type", "number")}
-            ${envField("paymentSchedule", "Payment Schedule", "textarea")}
-          </div>
-          <div class="grid cols3" style="margin-top:10px">
-            ${quoteEntryField("subViewTemplate", "Sub View Template (this item)")}
-            ${quoteEntryField("sortOrder", "Sort Order", "number")}
-            <div class="field"><label>Default quote item</label><div>${activeQuoteEntry()?.isDefault === 1 ? "Yes ★" : "No — use Set Default in the top bar"}</div></div>
-          </div>`, {open: true, sub: `${fileRoot.quoteItems.length} quote item(s)`}) : ""}
         ${collapsibleCard("Product Identity", `<div class="grid cols3">
           ${field("name", "Name")}
           ${field("slug", "Slug")}
@@ -1359,19 +1282,11 @@ function renderMetadata() {
         ${renderItemContactCard()}
         ${collapsibleCard("Save Target", `<div class="field"><label>Full path for backend save</label><input id="pathInput" value="${esc(currentFilePath)}" placeholder="Example: C:\Dell Inspirion\JSON Editor\item_mn__08092024.json" /></div>
           <div class="help">Chrome does not expose the full opened file path. Enter the source path here to use Save Version through FastAPI.</div>`, {open: false})}
-        ${collapsibleCard("JSON Snapshot", `<div class="action-row"><button class="btn blue" id="copyMetadataJson">Copy Current JSON</button><button class="btn" onclick="document.querySelector('[data-section=raw]').click()">Open Raw JSON Editor</button></div><pre class="json-window">${esc(JSON.stringify(serializeDocument(), null, 2))}</pre>`, {sub: "read-only", open: false})}
+        ${collapsibleCard("JSON Snapshot", `<div class="action-row"><button class="btn blue" id="copyMetadataJson">Copy Current JSON</button><button class="btn" onclick="document.querySelector('[data-section=raw]').click()">Open Raw JSON Editor</button></div><pre class="json-window">${esc(JSON.stringify(data, null, 2))}</pre>`, {sub: "read-only", open: false})}
       </div>
     </details>`;
   bindMetadataPanelCollapse();
   bindPathInputs();
-  editor.querySelectorAll("[data-env-key]").forEach(el => {
-    const handler = () => { const key = el.dataset.envKey; fileRoot[key] = parseInputValue(el.value, fileRoot[key]); markDirty(); };
-    el.addEventListener("input", handler); el.addEventListener("change", handler);
-  });
-  editor.querySelectorAll("[data-qentry-key]").forEach(el => {
-    const handler = () => { const entry = activeQuoteEntry(); if (!entry) return; const key = el.dataset.qentryKey; entry[key] = parseInputValue(el.value, entry[key]); markDirty(); renderQuoteItemBar(); };
-    el.addEventListener("input", handler); el.addEventListener("change", handler);
-  });
   const pathInput = document.getElementById("pathInput");
   if (pathInput) pathInput.addEventListener("input", e => { currentFilePath = e.target.value; rememberCurrentPath(); updateShell(); });
   const copyBtn = document.getElementById("copyMetadataJson");
@@ -1756,9 +1671,9 @@ function renderSaveExport() {
     updateShell();
   });
   document.getElementById("saveCopyPageBtn").onclick = saveVersion;
-  document.getElementById("selectFolderSaveBtn").onclick = async () => { if (!data) return alert("Open a JSON file first."); if (!shouldWarnBeforeSave()) return; await saveJsonToSelectedFolder({askForFileName: ["new-product.json", "new-predefined-quote.json"].includes(currentFileName)}); };
+  document.getElementById("selectFolderSaveBtn").onclick = async () => { if (!data) return alert("Open a JSON file first."); if (!shouldWarnBeforeSave()) return; await saveJsonToSelectedFolder({askForFileName: currentFileName === "new-product.json"}); };
   const saveAgainBtn = document.getElementById("saveAgainFolderBtn");
-  if (saveAgainBtn) saveAgainBtn.onclick = async () => { if (!data) return alert("Open a JSON file first."); if (!shouldWarnBeforeSave()) return; await saveJsonToSelectedFolder({reuseLast: true, askForFileName: ["new-product.json", "new-predefined-quote.json"].includes(currentFileName)}); };
+  if (saveAgainBtn) saveAgainBtn.onclick = async () => { if (!data) return alert("Open a JSON file first."); if (!shouldWarnBeforeSave()) return; await saveJsonToSelectedFolder({reuseLast: true, askForFileName: currentFileName === "new-product.json"}); };
   document.getElementById("validateBeforeSaveBtn").onclick = validateData;
   document.getElementById("downloadPageBtn").onclick = downloadJson;
 }
@@ -1791,8 +1706,7 @@ function renderValidation() {
       return `<div class="issue-group"><div class="section-rule">${esc(group)} (${grouped[group].length})</div>${rows}</div>`;
     }).join("");
   }
-  const quoteNote = docMode === "predefinedQuote" ? `<div class="help">Backend validation runs against the active quote item (${esc(activeQuoteEntry()?.subViewTemplate || `Quote Item ${activeQuoteItemIndex + 1}`)}). Switch quote items and re-validate to check each.</div>` : "";
-  editor.innerHTML = `${sectionTitle("Validation", "frontend guardrails + backend /validate", "validation")}<div class="action-row"><button class="btn green" id="runValidation">Run Backend Validation</button></div>${quoteNote}${summary}${filter}${body}`;
+  editor.innerHTML = `${sectionTitle("Validation", "frontend guardrails + backend /validate", "validation")}<div class="action-row"><button class="btn green" id="runValidation">Run Backend Validation</button></div>${summary}${filter}${body}`;
   document.getElementById("runValidation").onclick = validateData;
   document.getElementById("validationFilter").oninput = e => { validationFilter = e.target.value; renderValidation(); };
   document.getElementById("clearValidationFilter").onclick = () => { validationFilter = ""; renderValidation(); };
@@ -1823,28 +1737,20 @@ function compactValue(value) {
   return text.length > 500 ? text.slice(0, 500) + "…" : text;
 }
 function compareSectionForPath(path) {
-  const {rest, qi} = stripQuotePrefix(path);
-  if (qi === null && docMode === "predefinedQuote") return {group: "Predefined Quote", section: "metadata"};
-  if (rest === "") return {group: "Predefined Quote", section: "metadata"};
-  if (rest === "root") return {group: "Root", section: "metadata"};
-  if (rest.startsWith("contractTerms")) return {group: "Contract Terms", section: "contracts"};
-  if (rest.startsWith("packages")) return {group: "Packages", section: "packages"};
-  if (rest.startsWith("optionItems")) return {group: "Option Items", section: "options"};
-  if (rest.startsWith("customAttributes")) return {group: "Custom Attributes", section: "custom"};
+  if (path === "root") return {group: "Root", section: "metadata"};
+  if (path.startsWith("contractTerms")) return {group: "Contract Terms", section: "contracts"};
+  if (path.startsWith("packages")) return {group: "Packages", section: "packages"};
+  if (path.startsWith("optionItems")) return {group: "Option Items", section: "options"};
+  if (path.startsWith("customAttributes")) return {group: "Custom Attributes", section: "custom"};
   return {group: "Metadata", section: "metadata"};
 }
-function stripQuotePrefix(path) {
-  const m = path.match(/^quoteItems\.(\d+)\.item(?:\.(.*))?$/);
-  return m ? {qi: Number(m[1]), rest: m[2] || ""} : {qi: null, rest: path};
-}
 function packageIndexFromDiffPath(path) {
-  const match = stripQuotePrefix(path).rest.match(/^packages\.(\d+)/);
+  const match = path.match(/^packages\.(\d+)/);
   return match ? Number(match[1]) : null;
 }
 function packageModeFromDiffPath(path) {
-  const rest = stripQuotePrefix(path).rest;
-  if (rest.includes(".monthlyVolumes")) return "volumes";
-  if (rest.includes(".optionItems")) return "options";
+  if (path.includes(".monthlyVolumes")) return "volumes";
+  if (path.includes(".optionItems")) return "options";
   return "details";
 }
 function isEmptyishDiffValue(value) {
@@ -1853,7 +1759,7 @@ function isEmptyishDiffValue(value) {
 function buildDiffRows(filterText = "") {
   if (!originalData || !data) return [];
   const before = flattenForDiff(originalData);
-  const after = flattenForDiff(serializeDocument());
+  const after = flattenForDiff(data);
   const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
   const needle = filterText.trim().toLowerCase();
   const ignoreSort = sessionStorage.getItem("compareIgnoreSortOrder") === "true";
@@ -1865,9 +1771,7 @@ function buildDiffRows(filterText = "") {
     .filter(key => !needle || key.toLowerCase().includes(needle) || compactValue(before[key]).toLowerCase().includes(needle) || compactValue(after[key]).toLowerCase().includes(needle))
     .map(key => {
       const meta = compareSectionForPath(key);
-      const qi = stripQuotePrefix(key).qi;
-      const label = qi !== null ? ((fileRoot?.quoteItems?.[qi]?.subViewTemplate || `Quote Item ${qi + 1}`) + " — ") : "";
-      return { key, before: before[key], after: after[key], type: !(key in before) ? "added" : !(key in after) ? "removed" : "changed", group: label + meta.group, section: meta.section, quoteItemIndex: qi, packageIndex: packageIndexFromDiffPath(key), packageMode: packageModeFromDiffPath(key) };
+      return { key, before: before[key], after: after[key], type: !(key in before) ? "added" : !(key in after) ? "removed" : "changed", group: meta.group, section: meta.section, packageIndex: packageIndexFromDiffPath(key), packageMode: packageModeFromDiffPath(key) };
     });
 }
 function groupDiffRows(rows) {
@@ -1878,10 +1782,6 @@ function groupDiffRows(rows) {
   }, {});
 }
 function jumpToDiff(rowEl) {
-  if (rowEl.dataset.quoteItemIndex !== "" && rowEl.dataset.quoteItemIndex !== "null") {
-    setActiveQuoteItem(Number(rowEl.dataset.quoteItemIndex));
-    renderQuoteItemBar();
-  }
   currentSection = rowEl.dataset.section || "metadata";
   if (rowEl.dataset.packageIndex !== "" && rowEl.dataset.packageIndex !== "null") activePackageIndex = Number(rowEl.dataset.packageIndex);
   if (rowEl.dataset.packageMode) activePackageMode = rowEl.dataset.packageMode;
@@ -1896,7 +1796,7 @@ function renderCompare() {
   const grouped = groupDiffRows(rows);
   const controls = `<div class="search-row"><input id="compareSearch" value="${esc(query)}" placeholder="Filter by path or value" /><button class="btn" id="clearCompareSearch">Clear</button></div>
     <div class="action-row"><label class="checkline"><input type="checkbox" id="ignoreSortOrder" ${ignoreSort ? "checked" : ""}> Ignore sortOrder changes</label><label class="checkline"><input type="checkbox" id="ignoreEmptyValues" ${ignoreEmpty ? "checked" : ""}> Ignore empty value changes</label></div>`;
-  const body = rows.length ? `<div class="help" style="margin-bottom:10px">${rows.length} changed field(s). Click any changed path to jump to that editor section.</div><div class="diff-grid">${Object.keys(grouped).map(group => `<div class="issue-group"><div class="section-rule">${esc(group)} (${grouped[group].length})</div>${grouped[group].map(row => `<div class="diff-row" data-section="${esc(row.section)}" data-quote-item-index="${row.quoteItemIndex ?? ""}" data-package-index="${row.packageIndex ?? ""}" data-package-mode="${esc(row.packageMode || "")}"><div class="diff-head"><span class="diff-${row.type}">${esc(row.type.toUpperCase())}</span><span class="diff-path">${esc(row.key)}</span></div><div class="diff-body"><div class="diff-cell"><div class="diff-label">Original</div><div class="diff-value">${esc(compactValue(row.before))}</div></div><div class="diff-cell"><div class="diff-label">Current</div><div class="diff-value">${esc(compactValue(row.after))}</div></div></div></div>`).join("")}</div>`).join("")}</div>` : `<div class="okbox">No differences found against the opened file with the current filters.</div>`;
+  const body = rows.length ? `<div class="help" style="margin-bottom:10px">${rows.length} changed field(s). Click any changed path to jump to that editor section.</div><div class="diff-grid">${Object.keys(grouped).map(group => `<div class="issue-group"><div class="section-rule">${esc(group)} (${grouped[group].length})</div>${grouped[group].map(row => `<div class="diff-row" data-section="${esc(row.section)}" data-package-index="${row.packageIndex ?? ""}" data-package-mode="${esc(row.packageMode || "")}"><div class="diff-head"><span class="diff-${row.type}">${esc(row.type.toUpperCase())}</span><span class="diff-path">${esc(row.key)}</span></div><div class="diff-body"><div class="diff-cell"><div class="diff-label">Original</div><div class="diff-value">${esc(compactValue(row.before))}</div></div><div class="diff-cell"><div class="diff-label">Current</div><div class="diff-value">${esc(compactValue(row.after))}</div></div></div></div>`).join("")}</div>`).join("")}</div>` : `<div class="okbox">No differences found against the opened file with the current filters.</div>`;
   editor.innerHTML = `${sectionTitle("Compare Versions", "grouped original vs current, discountItems hidden", "compare")} ${controls} ${body}`;
   document.getElementById("compareSearch").addEventListener("input", e => { sessionStorage.setItem("compareFilter", e.target.value); renderCompare(); });
   document.getElementById("clearCompareSearch").onclick = () => { sessionStorage.removeItem("compareFilter"); renderCompare(); };
@@ -1905,7 +1805,7 @@ function renderCompare() {
   editor.querySelectorAll(".diff-row[data-section]").forEach(row => row.onclick = () => jumpToDiff(row));
 }
 function renderRawJson(rawOverride = null, rawStatus = "") {
-  const rawText = rawOverride ?? JSON.stringify(serializeDocument(), null, 2);
+  const rawText = rawOverride ?? JSON.stringify(data, null, 2);
   const differs = rawDiffersFromEdited(rawText);
   const status = rawStatus || (differs ? "Raw JSON has edits that are not applied yet." : "Raw JSON matches the structured editor.");
   const rawEditor = `<textarea id="rawJson" class="raw-json" spellcheck="false">${esc(rawText)}</textarea>`;
@@ -1921,12 +1821,8 @@ function renderRawJson(rawOverride = null, rawStatus = "") {
     try {
       const parsed = JSON.parse(text);
       if (!confirm("Apply raw JSON changes to the structured editor?")) return;
-      fileRoot = parsed;
-      docMode = detectDocMode(parsed);
-      if (docMode === "predefinedQuote") { normalizeQuoteItems(fileRoot); setActiveQuoteItem(defaultQuoteItemIndex(fileRoot)); }
-      else { activeQuoteItemIndex = 0; data = fileRoot; }
+      data = parsed;
       markDirty();
-      renderQuoteItemBar();
       render();
     } catch (err) {
       const details = jsonParseDetails(text, err);
@@ -2057,17 +1953,6 @@ function runFrontendValidation(apply = true) {
     if (isBlankValue(attr.name)) addValidationIssue(issues, "warning", "Custom Attributes", "custom", `customAttributes.${idx}.name`, `Custom attribute ${idx + 1} is missing a name.`);
   });
   duplicateSortIssues(data.customAttributes || [], "Custom Attributes", "custom", "customAttributes", issues);
-
-  if (docMode === "predefinedQuote" && fileRoot) {
-    const qs = fileRoot.quoteItems || [];
-    if (isBlankValue(fileRoot.name)) addValidationIssue(issues, "error", "Predefined Quote", "metadata", "quoteName", "Predefined quote name is required.");
-    if (!qs.length) addValidationIssue(issues, "error", "Predefined Quote", "metadata", "quoteItems", "Predefined quote has no quote items.");
-    const defaults = qs.filter(q => q.isDefault === 1).length;
-    if (qs.length && defaults !== 1) addValidationIssue(issues, "error", "Predefined Quote", "metadata", "quoteItems.isDefault", `Exactly one quote item must be the default (found ${defaults}).`);
-    const svNames = qs.map(q => String(q.subViewTemplate || "").trim());
-    svNames.forEach((n, i) => { if (!n) addValidationIssue(issues, "warning", "Predefined Quote", "metadata", `quoteItems.${i}.subViewTemplate`, `Quote item ${i + 1} has no sub view template label.`); });
-    duplicateValues(svNames.filter(Boolean)).forEach(dup => addValidationIssue(issues, "warning", "Predefined Quote", "metadata", "quoteItems.subViewTemplate", `Duplicate sub view template label: ${dup}`));
-  }
 
   if (apply) {
     validationIssues = issues;
@@ -2508,7 +2393,7 @@ function renderOptumPreview() {
 
 function renderPreview() {
   if (currentPreview === "json" && !document.body.classList.contains("preview-mode")) {
-    previewBody.innerHTML = `<pre class="code">${esc(JSON.stringify(serializeDocument(), null, 2))}</pre>`;
+    previewBody.innerHTML = `<pre class="code">${esc(JSON.stringify(data, null, 2))}</pre>`;
     return;
   }
   renderOptumPreview();
@@ -2526,55 +2411,6 @@ function togglePreviewMode(force) {
   renderPreview();
 }
 
-function renderQuoteItemBar() {
-  const bar = document.getElementById("quoteItemBar");
-  if (!bar) return;
-  if (docMode !== "predefinedQuote" || !fileRoot || !Array.isArray(fileRoot.quoteItems)) {
-    bar.classList.add("hidden"); bar.innerHTML = ""; return;
-  }
-  const items = fileRoot.quoteItems;
-  const opts = items.map((q, i) => {
-    const label = (q.subViewTemplate && q.subViewTemplate.trim()) || `Quote Item ${i + 1}`;
-    return `<option value="${i}" ${i === activeQuoteItemIndex ? "selected" : ""}>${esc(label)}${q.isDefault === 1 ? " ★" : ""}</option>`;
-  }).join("");
-  bar.classList.remove("hidden");
-  bar.innerHTML = `<span class="qi-label">Quote Item</span><select id="qiSelect">${opts}</select>
-    <span>${activeQuoteItemIndex + 1} / ${items.length}</span>
-    <button class="btn qi-btn" id="qiSetDefault" title="Mark this quote item as the default">Set Default</button>
-    <button class="btn qi-btn" id="qiAdd" title="Add a fresh API-Tiered quote item">+ Add</button>
-    <button class="btn qi-btn" id="qiDuplicate" title="Clone the active quote item">Duplicate</button>
-    <button class="btn qi-btn" id="qiUp" title="Move quote item up">▲</button><button class="btn qi-btn" id="qiDown" title="Move quote item down">▼</button>
-    <button class="btn qi-btn" id="qiDelete" title="Delete the active quote item">Delete</button><span class="qi-spacer"></span>
-    <span>envelope: ${esc(fileRoot.name || "(unnamed)")}</span>`;
-  document.getElementById("qiSelect").onchange = e => { setActiveQuoteItem(Number(e.target.value)); markDirtyNoBaseline(); renderQuoteItemBar(); render(); };
-  document.getElementById("qiSetDefault").onclick = () => { items.forEach((q, i) => { q.isDefault = i === activeQuoteItemIndex ? 1 : 0; }); markDirty(); renderQuoteItemBar(); };
-  document.getElementById("qiAdd").onclick = () => addQuoteItem(blankTemplate("API-Tiered-Public"), false);
-  document.getElementById("qiDuplicate").onclick = () => addQuoteItem(clone(data), true);
-  document.getElementById("qiUp").onclick = () => moveQuoteItem(-1);
-  document.getElementById("qiDown").onclick = () => moveQuoteItem(1);
-  document.getElementById("qiDelete").onclick = deleteQuoteItem;
-}
-function markDirtyNoBaseline() { runFrontendValidation(false); updateShell(); renderPreview(); }
-function addQuoteItem(itemObj, isDuplicate = false) {
-  const entry = {subViewTemplate: isDuplicate ? `${activeQuoteEntry()?.subViewTemplate || "Quote Item"} (copy)` : "New Sub View", isDefault: 0, sortOrder: fileRoot.quoteItems.length, item: itemObj};
-  fileRoot.quoteItems.push(entry); normalizeQuoteItems(fileRoot); setActiveQuoteItem(fileRoot.quoteItems.length - 1);
-  markDirty(); renderQuoteItemBar(); render();
-}
-function moveQuoteItem(delta) {
-  const items = fileRoot.quoteItems; const to = activeQuoteItemIndex + delta;
-  if (to < 0 || to >= items.length) return;
-  const [row] = items.splice(activeQuoteItemIndex, 1); items.splice(to, 0, row); items.forEach((q, i) => { q.sortOrder = i; });
-  setActiveQuoteItem(to); markDirty(); renderQuoteItemBar(); render();
-}
-function deleteQuoteItem() {
-  const items = fileRoot.quoteItems;
-  if (items.length <= 1) return alert("A predefined quote must keep at least one quote item.");
-  const label = activeQuoteEntry()?.subViewTemplate || `Quote Item ${activeQuoteItemIndex + 1}`;
-  if (!confirm(`Delete quote item "${label}"? This cannot be undone.`)) return;
-  items.splice(activeQuoteItemIndex, 1); normalizeQuoteItems(fileRoot); setActiveQuoteItem(Math.min(activeQuoteItemIndex, items.length - 1));
-  markDirty(); renderQuoteItemBar(); render();
-}
-
 function updateShell() {
   const pkgCount = data?.packages?.length || 0;
   if (data) runFrontendValidation(true);
@@ -2582,11 +2418,6 @@ function updateShell() {
   document.getElementById("dirtyDot").className = dirty ? "dot dirty" : "dot";
   document.getElementById("pkgBadge").textContent = pkgCount;
   document.getElementById("statusFile").textContent = "file: " + currentFileName;
-  if (docMode === "predefinedQuote" && fileRoot?.quoteItems?.length) {
-    const entry = fileRoot.quoteItems[activeQuoteItemIndex];
-    const label = (entry?.subViewTemplate || "").trim() || `Quote Item ${activeQuoteItemIndex + 1}`;
-    document.getElementById("statusFile").textContent = `file: ${currentFileName}  •  quote item ${activeQuoteItemIndex + 1}/${fileRoot.quoteItems.length} (${label})`;
-  }
   document.getElementById("statusDirty").textContent = dirty ? "unsaved" : "saved";
   document.getElementById("statusPath").textContent = "path: " + (currentFilePath || "blank");
   updateValidationBadges();
@@ -2606,7 +2437,6 @@ function updateShell() {
     pill.className = "validation-pill";
     document.getElementById("statusValidation").textContent = validationRan ? "validation: ready" : "validation: not run";
   }
-  renderQuoteItemBar();
 }
 function normalizeSort(arr) { arr.forEach((x, i) => { if (x && typeof x === "object") x.sortOrder = i; }); }
 function defaultContractTerm(sortOrder) { return {termValue: 1, termUnit: "Y", description: "", isDefault: 0, sortOrder, discountItems: []}; }
@@ -2697,17 +2527,9 @@ function blankTemplate(viewTemplate) {
   };
 }
 
-function blankPredefinedQuote() {
-  return {
-    name: "New Predefined Quote", description: "New Predefined Quote", type: 0, catalogCode: "", paymentSchedule: "",
-    quoteItems: [{subViewTemplate: "Monthly Minimum", isDefault: 1, sortOrder: 0, item: blankTemplate("API-Tiered-Public")}],
-  };
-}
-
 const TEMPLATE_DESCRIPTIONS = {
   "API-Tiered-Public": "<b>API-Tiered-Public</b> — For API products with tiered monthly volume pricing. Pre-fills one package with one volume band and an Implementation option group. Use this for products like Medical Network APIs.",
   "Software-MonthlyVolume-Public": "<b>Software-MonthlyVolume-Public</b> — For software products with contract terms and monthly volume selection. Pre-fills one package and an Implementation option group. Use this for products like Revenue Performance Advisor.",
-  "Predefined-Quote": "<b>Predefined-Quote</b> — An envelope wrapping one or more quote items, each a full product item with its own sub view template label. Starts with one API-Tiered quote item; add more from the Quote Item bar.",
 };
 
 function openNewFileModal() {
@@ -2732,11 +2554,11 @@ function updateNewFileModalDesc() {
 
 function createNewFile() {
   const select = document.getElementById("newFileTemplateSelect");
-  const value = select.value;
+  const viewTemplate = select.value;
   closeNewFileModal();
-  const template = value === "Predefined-Quote" ? blankPredefinedQuote() : blankTemplate(value);
+  const template = blankTemplate(viewTemplate);
   browserFileHandle = null;
-  loadJson(JSON.stringify(template), value === "Predefined-Quote" ? "new-predefined-quote.json" : "new-product.json");
+  loadJson(JSON.stringify(template), "new-product.json");
   currentFilePath = "";
   previewCheckedPackages.add(0);
   dirty = true;
@@ -2761,18 +2583,8 @@ async function openFile() {
 }
 function loadJson(text, name) {
   try {
-    const parsed = JSON.parse(text);
-    fileRoot = parsed;
-    docMode = detectDocMode(parsed);
-    if (docMode === "predefinedQuote") {
-      normalizeQuoteItems(fileRoot);
-      activeQuoteItemIndex = defaultQuoteItemIndex(fileRoot);
-      data = fileRoot.quoteItems[activeQuoteItemIndex].item;
-    } else {
-      activeQuoteItemIndex = 0;
-      data = fileRoot;
-    }
-    originalData = clone(fileRoot);
+    data = JSON.parse(text);
+    originalData = clone(data);
     currentFileName = name || "loaded.json";
     outputFileNameOverride = "";
     currentFilePath = recallPathForFile(currentFileName) || currentFileName;
@@ -2784,7 +2596,6 @@ function loadJson(text, name) {
     previewCheckedPackages.clear();
     previewAddonsOpen = false;
     runFrontendValidation(true);
-    renderQuoteItemBar();
     render();
   } catch (err) {
     alert("Could not parse JSON: " + err.message);
@@ -2836,7 +2647,7 @@ function versionedJsonFileName(baseOverride = null) {
   return `${base}_${APP_VERSION_JS}_${stamp}.json`;
 }
 async function writeJsonToDirectoryHandle(dirHandle, options = {}) {
-  const shouldAskName = options.askForFileName || currentFileName === "new-product.json" || currentFileName === "new-predefined-quote.json" || !currentFileName || currentFileName === "No file loaded";
+  const shouldAskName = options.askForFileName || currentFileName === "new-product.json" || !currentFileName || currentFileName === "No file loaded";
   const base = shouldAskName ? promptForOutputBaseName() : currentOutputBaseName();
   if (base === null) {
     lastSaveMessage = "Folder save canceled. No file was saved.";
@@ -2847,7 +2658,7 @@ async function writeJsonToDirectoryHandle(dirHandle, options = {}) {
   const name = versionedJsonFileName(base);
   const fileHandle = await dirHandle.getFileHandle(name, {create: true});
   const writable = await fileHandle.createWritable();
-  await writable.write(JSON.stringify(serializeDocument(), null, 2));
+  await writable.write(JSON.stringify(data, null, 2));
   await writable.close();
   const folderName = dirHandle.name || "selected folder";
   lastDirectoryHandle = dirHandle;
@@ -2918,14 +2729,14 @@ async function saveVersion() {
       const reuse = confirm(`No full path is set. Save to last selected folder (${lastDirectoryLabel || "selected folder"})?
 
 OK saves there. Cancel opens the folder picker.`);
-      await saveJsonToSelectedFolder({reuseLast: reuse, askForFileName: ["new-product.json", "new-predefined-quote.json"].includes(currentFileName)});
+      await saveJsonToSelectedFolder({reuseLast: reuse, askForFileName: currentFileName === "new-product.json"});
     } else {
-      await saveJsonToSelectedFolder({askForFileName: ["new-product.json", "new-predefined-quote.json"].includes(currentFileName)});
+      await saveJsonToSelectedFolder({askForFileName: currentFileName === "new-product.json"});
     }
     return;
   }
   try {
-    const res = await fetch("/save", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({path: currentFilePath, data: serializeDocument()})});
+    const res = await fetch("/save", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({path: currentFilePath, data})});
     const json = await res.json();
     if (!res.ok) throw new Error(json.detail || "Save failed");
     lastSaveMessage = `Saved backend copy: ${json.saved_as}`;
@@ -2944,10 +2755,10 @@ OK saves there. Cancel opens the folder picker.`);
 function downloadJson() {
   if (!data) return alert("Open a JSON file first.");
   if (!shouldWarnBeforeSave()) return;
-  const base = (currentFileName === "new-product.json" || currentFileName === "new-predefined-quote.json") ? promptForOutputBaseName() : currentOutputBaseName();
+  const base = currentFileName === "new-product.json" ? promptForOutputBaseName() : currentOutputBaseName();
   if (base === null) return;
   const name = versionedJsonFileName(base);
-  const blob = new Blob([JSON.stringify(serializeDocument(), null, 2)], {type: "application/json"});
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = name;
@@ -2961,14 +2772,10 @@ function downloadJson() {
 function discardChanges() {
   if (!originalData) return;
   if (dirty && !confirm("Discard unsaved changes?")) return;
-  fileRoot = clone(originalData);
-  docMode = detectDocMode(fileRoot);
-  if (docMode === "predefinedQuote") { normalizeQuoteItems(fileRoot); setActiveQuoteItem(defaultQuoteItemIndex(fileRoot)); }
-  else { activeQuoteItemIndex = 0; data = fileRoot; }
+  data = clone(originalData);
   dirty = false;
   validationErrors = [];
   validationRan = false;
-  renderQuoteItemBar();
   render();
 }
 
